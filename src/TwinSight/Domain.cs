@@ -1,0 +1,16 @@
+namespace TwinSight;
+public sealed record Source(string Id, string Name, int Records, string Description);
+public sealed record ServiceNode(string Id, string Name, string Owner, int X, int Y, double Criticality, double Latency, string Description);
+public sealed record Dependency(string From, string To, double Weight);
+public sealed record Evidence(string Id, string Source, string Node, string Text);
+public sealed record CustomerSegment(string Id, string Name, int Users, double Sensitivity, string[] Services);
+public sealed record DemoData(string Organization, string Product, string Notice, Source[] Sources, ServiceNode[] Nodes, Dependency[] Edges, Evidence[] Evidence, CustomerSegment[] Customers);
+public sealed record BuildRequest(string[]? Sources);
+public sealed record SimulationRequest(string? TwinId, string? Description, string[]? Targets, string? Kind, int Rollout, int TestCoverage, bool Canary);
+public sealed record TwinModel(string Id, string[] Sources, int RecordCount, int Coverage, string[] Missing, string[] EvidenceIds, DateTimeOffset BuiltAt);
+public sealed record NodeImpact(string Id, double Risk, double LatencyDelta, string[] Path);
+public sealed record SegmentImpact(string Id, string Name, int Users, double ChallengeIndex, int ExposedUsers);
+public sealed record TimelinePoint(int Day, double Factor, double Risk, double LatencyDelta, int ExposedUsers);
+public sealed record SimulationResult(string Id, string TwinId, string Description, string Kind, string[] Targets, int Rollout, int TestCoverage, bool Canary, string Mode, double OverallRisk, int Coverage, NodeImpact[] Nodes, SegmentImpact[] Customers, TimelinePoint[] Timeline, string[] EvidenceIds, string[] Assumptions, string[] Mitigations, DateTimeOffset CreatedAt);
+public sealed record ProposalRequest(string? TwinId, string? Description);
+public sealed record ChangeProposal(string[] Targets, string Kind, string Reasoning, string[] EvidenceIds);

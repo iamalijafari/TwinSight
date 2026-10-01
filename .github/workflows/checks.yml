@@ -1,0 +1,34 @@
+name: TwinSight checks
+on: [push, pull_request]
+jobs:
+  local-demo:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: dotnet build src/TwinSight/TwinSight.csproj
+      - run: dotnet run --project tests/TwinSight.Checks
+      - run: npm test && npm run test:ui
+      - run: npm install
+      - run: npx playwright install --with-deps chromium
+      - name: Start local server
+        run: |
+          dotnet run --no-build --project src/TwinSight --urls http://127.0.0.1:5080 > /tmp/twinsight-server.log 2>&1 &
+          for i in $(seq 1 30); do
+            if curl --fail --silent http://127.0.0.1:5080/api/health; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/twinsight-server.log
+          exit 1
+      - run: npm run test:api
+      - run: npm run test:browser
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: TwinSight-browser-QA
+          path: qa/
