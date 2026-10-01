@@ -10,7 +10,12 @@ let browser;
 try {
  await new Promise((r,j)=>{server.stdout.once('data',r);server.on('error',j);server.on('exit',code=>j(new Error('Server exited '+code)))});
  browser=await chromium.launch({headless:true});
- const page=await browser.newPage({viewport:{width:1440,height:1000}});
+ const page=await browser.newPage({viewport:{width:1440,height:1000},reducedMotion:'reduce'});
+ const navigate=async id=>{
+  await page.locator(`nav [href="#${id}"]`).click();
+  await page.locator(`#${id}:not([hidden])`).waitFor();
+  await page.locator(`nav [href="#${id}"].active`).waitFor();
+ };
  const errors=[];page.on('pageerror',e=>errors.push(e.message));
  await mkdir('qa',{recursive:true});
  await page.goto('http://127.0.0.1:8098');
@@ -21,15 +26,15 @@ try {
   await page.setViewportSize({width,height:1000});
   const sizes=await page.evaluate(()=>({width:innerWidth,scroll:document.documentElement.scrollWidth}));
   assert.ok(sizes.scroll<=width+1,`Horizontal overflow: ${width} -> ${sizes.scroll}`);
-  await page.screenshot({path:`qa/workspace-${width}.png`,fullPage:true});
+  await page.screenshot({path:`qa/workspace-${width}.png`,fullPage:true,animations:'disabled'});
  }
  await page.setViewportSize({width:1440,height:1000});
  await page.locator('[data-choose-mode="pilot"]').click();
  assert.match(await page.locator('#impact-cards').textContent(),/−۲۷٫۶ تا ۵۸٫۸/);
- await page.locator('nav [href="#knowledge"]').click();
+ await navigate('knowledge');
  await page.locator('#add-ticket').click();
- await page.screenshot({path:'qa/knowledge-desktop.png',fullPage:true});
- await page.locator('nav [href="#workspace"]').click();
+ await page.screenshot({path:'qa/knowledge-desktop.png',fullPage:true,animations:'disabled'});
+ await navigate('workspace');
  assert.match(await page.locator('#update-banner').textContent(),/۲۹ به ۳۶/);
  await page.locator('#decision').selectOption('pilot');await page.locator('#save-decision').click();
  assert.match(await page.locator('#decision-status').textContent(),/تصمیم ثبت‌شده/);
@@ -44,18 +49,18 @@ try {
  await page.locator('[data-evidence="SUP-086"]').first().click();
  await page.locator('#evidence-dialog[open]').waitFor();await page.keyboard.press('Escape');
  const downloadPromise=page.waitForEvent('download');
- await page.locator('nav [href="#report"]').click();
+ await navigate('report');
  await page.locator('[data-action="export"]').click();
  const download=await downloadPromise;await download.saveAs('qa/report.json');
  const report=JSON.parse(await readFile('qa/report.json','utf8'));assert.equal(report.analysis.revision,2);
- await page.screenshot({path:'qa/report-desktop.png',fullPage:true});
+ await page.screenshot({path:'qa/report-desktop.png',fullPage:true,animations:'disabled'});
  await page.pdf({path:'qa/report.pdf',format:'A4',printBackground:true,preferCSSPageSize:true});
- await page.locator('nav [href="#about"]').click();await page.screenshot({path:'qa/about-desktop.png',fullPage:true});
+ await navigate('about');await page.screenshot({path:'qa/about-desktop.png',fullPage:true,animations:'disabled'});
  await page.setViewportSize({width:390,height:844});
  for(const id of ['knowledge','report','about']){
-  await page.locator(`nav [href="#${id}"]`).click();
+  await navigate(id);
   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),`Mobile overflow: ${id}`);
-  await page.screenshot({path:`qa/${id}-mobile.png`,fullPage:true});
+  await page.screenshot({path:`qa/${id}-mobile.png`,fullPage:true,animations:'disabled'});
  }
  assert.deepEqual(errors,[]);
  console.log('Browser QA passed: 5 widths, all pages, comparison, ticket, decision, evidence, export, PDF and no runtime errors.');

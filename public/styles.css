@@ -2168,6 +2168,7 @@ dialog::backdrop {
     color: #172b45;
     font-size: 11px;
   }
+  .skip,
   .sidebar,
   .topbar,
   .demo-notice,
