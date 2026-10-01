@@ -1,8 +1,4 @@
-**/bin/
-**/obj/
 node_modules/
-qa/
-.env
-.env.*
-!.env.example
-*.user
+dist/
+.DS_Store
+*.log

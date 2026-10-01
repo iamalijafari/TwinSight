@@ -1,8 +1,14 @@
 {
-  "name":"twinsight-mvp",
-  "version":"1.0.0",
-  "private":true,
-  "type":"module",
-  "scripts":{"test":"node --test tests/engine.test.mjs","test:ui":"node --test tests/ui.test.mjs","test:browser":"node tools/browser-check.mjs","test:api":"node tools/api-check.mjs"},
-  "devDependencies":{"@playwright/test":"^1.58.0"}
+  "name": "twinsight-mvp",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "description": "A static Persian organizational digital-twin demo by BridgeX",
+  "engines": {"node": ">=22"},
+  "scripts": {
+    "dev": "node scripts/serve.mjs",
+    "start": "node scripts/serve.mjs",
+    "build": "node scripts/build.mjs",
+    "preview": "node scripts/serve.mjs --dist"
+  }
 }
