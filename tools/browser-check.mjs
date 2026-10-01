@@ -11,7 +11,7 @@ try{
   await page.goto(base);await page.waitForSelector('[data-source]');
   await page.locator('#build').click();await page.waitForFunction(()=>!document.getElementById('simulate').disabled);
   await page.locator('#simulate').click();await page.waitForFunction(()=>document.getElementById('risk-value').textContent==='۵۹٫۹');
-  await page.locator('#network [role=button]').filter({hasText:'Analytics'}).press('Enter');assert.match(await page.locator('#inspector').textContent(),/Payment → Orders → Analytics/);
+  await page.locator('#network [role=button]').filter({hasText:'گزارش فروش'}).press('Enter');assert.match(await page.locator('#inspector').textContent(),/Payment → Orders → Analytics/);
   await page.locator('#pin').click();await page.locator('#canary').check();assert.match(await page.locator('#draft-state').textContent(),/اجرای قبلی/);await page.locator('#simulate').click();await page.waitForFunction(()=>document.getElementById('risk-value').textContent==='۳۷٫۱');assert.match(await page.locator('#comparison').textContent(),/کمتر/);
   await page.locator('#baseline-view').click();assert.equal(await page.locator('#risk-value').textContent(),'۰');await page.locator('#future-view').click();
   const downloadPromise=page.waitForEvent('download');await page.locator('#export').click();const download=await downloadPromise;await download.saveAs('qa/TwinSight-scenario-report.json');

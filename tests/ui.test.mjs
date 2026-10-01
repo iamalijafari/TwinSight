@@ -10,7 +10,7 @@ const $=id=>doc.getElementById(id);
 await import('../src/TwinSight/wwwroot/app.js');
 await new Promise(resolve=>setImmediate(resolve));
 test('offline UI flow — build, simulate, scrub, inspect, compare, explain, export, invalidate',async()=>{
-  assert.match($('runtime').textContent,/OFFLINE JS/);assert.equal($('simulate').disabled,true);
+  assert.match($('runtime').textContent,/دموی محلی در مرورگر/);assert.equal($('simulate').disabled,true);
   assert.equal($('source-grid').children.length,4);assert.equal($('targets').children.length,8);
   await $('build').click();assert.equal($('simulate').disabled,false);assert.match($('step1').textContent,/۲٬۶۴۸/);
   await $('change-form').emit('submit');assert.equal($('future-view').disabled,false);assert.equal($('risk-value').textContent,'۵۹٫۹');assert.equal($('customer-list').children.length,4);assert.match($('inspector').textContent,/SEP-142/);
@@ -42,11 +42,11 @@ test('API UI flow preserves server mode, rejects stale async responses, handles 
     throw new Error('unexpected endpoint '+url);
   };
   await import('../src/TwinSight/wwwroot/app.js?api-mode-test');await new Promise(resolve=>setImmediate(resolve));
-  assert.match(s('runtime').textContent,/NET API/);
+  assert.match(s('runtime').textContent,/دموی متصل به سرور/);
   delayBuild=true;const pending=s('build').click();await new Promise(resolve=>setImmediate(resolve));const source=serverDoc.querySelectorAll('[data-source]').find(n=>n.value==='support');source.checked=false;await source.emit('change');releaseBuild();await pending;assert.equal(s('simulate').disabled,true);assert.match(s('notice').textContent,/هنگام ساخت/);
   delayBuild=false;await s('build').click();delaySim=true;const simulation=s('change-form').emit('submit');await new Promise(resolve=>setImmediate(resolve));s('rollout').value='20';await s('change-form').emit('input');releaseSim();await simulation;assert.equal(s('risk-value').textContent,'—');assert.match(s('notice').textContent,/هنگام محاسبه/);
   delaySim=false;await s('change-form').emit('submit');assert.equal(s('risk-value').textContent,'۲۳٫۹');await s('explain').click();assert.match(s('narrative').textContent,/server rule explanation/);
-  failSim=true;await s('change-form').emit('submit');assert.match(s('notice').textContent,/server unreachable/);assert.equal(s('risk-value').textContent,'۲۳٫۹');assert.match(s('runtime').textContent,/NET API/);assert.equal(s('simulate').disabled,false);
+  failSim=true;await s('change-form').emit('submit');assert.match(s('notice').textContent,/server unreachable/);assert.equal(s('risk-value').textContent,'۲۳٫۹');assert.match(s('runtime').textContent,/دموی متصل به سرور/);assert.equal(s('simulate').disabled,false);
 });
 
 test('AI proposal UI requires explicit approval before applying suggested targets',async()=>{
