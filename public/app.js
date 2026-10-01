@@ -1,235 +1,561 @@
-import {simulate, atDay} from './engine.js';
-const $ = id => document.getElementById(id);
-const esc = value => String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const fa = value => new Intl.NumberFormat('fa-IR', {maximumFractionDigits: 1}).format(value);
-const icons = {
-  layers: '<path d="m3 7 9-4 9 4-9 4-9-4Zm0 5 9 4 9-4M3 17l9 4 9-4"/>',
-  network: '<rect x="9" y="2" width="6" height="6" rx="1"/><rect x="2" y="16" width="6" height="6" rx="1"/><rect x="16" y="16" width="6" height="6" rx="1"/><path d="M12 8v4M5 16v-4h14v4"/>',
-  file: '<path d="M14 2H5v20h14V7l-5-5Zm0 0v5h5M8 12h8M8 16h6"/>',
-  spark: '<path d="m12 3 2.4 6.6L21 12l-6.6 2.4L12 21l-2.4-6.6L3 12l6.6-2.4L12 3ZM20 2v4M18 4h4"/>',
-  shield: '<path d="m12 2 9 4v6c0 5-9 10-9 10S3 17 3 12V6l9-4Z"/><path d="m8 12 3 3 5-6"/>',
-  play: '<path d="m9 5 10 7-10 7V5Z"/><circle cx="12" cy="12" r="10"/>',
-  route: '<circle cx="5" cy="5" r="2"/><circle cx="19" cy="19" r="2"/><path d="M7 5h9a4 4 0 0 1 0 8H8a3 3 0 0 0 0 6h9"/>',
-  users: '<circle cx="9" cy="7" r="3"/><path d="M3 21v-3a6 6 0 0 1 12 0v3M16 4a3 3 0 0 1 0 6M21 21v-3a6 6 0 0 0-4-5"/>',
-  compare: '<path d="M5 4v16M19 4v16M5 8h13l-3-3M19 16H6l3 3"/>',
+import { analyze, applyUpdate, scenarioById, MODES } from "./engine.js";
+const $ = (id) => document.getElementById(id);
+const fa = (n) =>
+  new Intl.NumberFormat("fa-IR", { maximumFractionDigits: 1 }).format(n);
+const esc = (s) =>
+  String(s).replace(
+    /[&<>"']/g,
+    (c) =>
+      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[
+        c
+      ],
+  );
+const iconPaths = {
+  layers:
+    '<path d="m12 3 9 5-9 5-9-5 9-5Z"/><path d="m3 12 9 5 9-5M3 16l9 5 9-5"/>',
+  network:
+    '<rect x="8" y="2" width="8" height="5" rx="1"/><rect x="2" y="17" width="7" height="5" rx="1"/><rect x="15" y="17" width="7" height="5" rx="1"/><path d="M12 7v5M5.5 17v-5h13v5"/>',
+  file: '<path d="M14 2H5v20h14V7l-5-5Z"/><path d="M14 2v5h5M8 12h8M8 16h6"/>',
+  compass: '<circle cx="12" cy="12" r="9"/><path d="m16 8-3 5-5 3 3-5 5-3Z"/>',
+  play: '<path d="m8 4 12 8-12 8V4Z"/>',
+  info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7v.2"/>',
+  spark:
+    '<path d="m12 3 2.5 6.5L21 12l-6.5 2.5L12 21l-2.5-6.5L3 12l6.5-2.5L12 3Z"/>',
+  shield:
+    '<path d="m12 2 8 3v6c0 6-8 11-8 11S4 17 4 11V5l8-3Z"/><path d="m8 12 3 3 5-6"/>',
+  bolt: '<path d="m13 2-9 12h7l-1 8 10-13h-7l1-7Z"/>',
+  trend: '<path d="m3 17 6-6 4 4 8-10M15 5h6v6"/>',
+  users:
+    '<circle cx="9" cy="8" r="3"/><path d="M3 21v-3a6 6 0 0 1 12 0v3M16 5a3 3 0 0 1 0 6M17 15a5 5 0 0 1 4 5"/>',
+  refresh:
+    '<path d="M20 11a8 8 0 0 0-14-5L3 9M3 3v6h6M4 13a8 8 0 0 0 14 5l3-3M21 21v-6h-6"/>',
   search: '<circle cx="10" cy="10" r="6"/><path d="m15 15 6 6"/>',
-  payment: '<rect x="2" y="5" width="20" height="14" rx="3"/><path d="M2 10h20M6 15h4"/>',
-  identity: '<circle cx="10" cy="7" r="3"/><path d="M3 21v-3a7 7 0 0 1 10-6M15 15h6v6h-6zM16 15v-2a2 2 0 0 1 4 0v2"/>',
-  analytics: '<path d="M3 3v18h18M7 16v-4M12 16V8M17 16V5"/>',
-  clock: '<circle cx="12" cy="12" r="9"/><path d="M12 6v6l4 2"/>',
-  alert: '<path d="m12 3 10 18H2L12 3ZM12 9v5M12 17v1"/>',
-  download: '<path d="M12 3v12m-5-5 5 5 5-5M3 16v5h18v-5"/>',
-  print: '<path d="M6 8V2h12v6M6 17H3V8h18v9h-3M6 14h12v8H6z"/>',
-  mobile: '<rect x="6" y="2" width="12" height="20" rx="2"/><path d="M10 18h4"/>',
-  store: '<path d="M3 9h18l-2-6H5L3 9ZM4 9v12h16V9M8 21v-7h5v7"/>',
+  download: '<path d="M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5"/>',
+  check: '<path d="m5 12 4 4L19 6"/>',
+  arrow: '<path d="M20 12H4m6-6-6 6 6 6"/>',
+  alert: '<path d="m12 3 10 18H2L12 3Z"/><path d="M12 9v5M12 17v.2"/>',
+  code: '<path d="m8 6-6 6 6 6M16 6l6 6-6 6m-3-15-2 18"/>',
 };
-const icon = name => `<svg class="icon" viewBox="0 0 24 24" aria-hidden="true">${icons[name] || icons.layers}</svg>`;
-function hydrateIcons(root = document) { root.querySelectorAll('[data-icon]').forEach(el => { el.innerHTML = icon(el.dataset.icon); }); }
-hydrateIcons();
-const presets = {
-  payment: {title:'تعویض درگاه پرداخت', subtitle:'وقتی پرداخت تغییر کند، خرید چه می‌شود؟', description:'اتصال پرداخت به درگاه جدید و تغییر روش تلاش مجدد در صورت ناموفق بودن پرداخت.', target:'payment', kind:'migration', testCoverage:45, rollout:100, canary:false},
-  identity: {title:'تغییر ورود کاربران', subtitle:'از ورود کاربر تا ثبت سفارش', description:'تغییر روش صدور توکن و ورود یکپارچه کاربران در سامانه فروشگاه.', target:'identity', kind:'security', testCoverage:55, rollout:100, canary:false},
-  analytics: {title:'بهبود گزارش فروش', subtitle:'یک تغییر کوچک، با اثر محدودتر', description:'بهینه‌سازی موتور گزارش فروش برای پاسخ سریع‌تر به درخواست مدیران.', target:'analytics', kind:'performance', testCoverage:80, rollout:100, canary:false},
+const icon = (name) =>
+  `<svg class="icon" viewBox="0 0 24 24" aria-hidden="true">${iconPaths[name] || iconPaths.file}</svg>`;
+const sourceIcon = (id) =>
+  ({ backlog: "layers", support: "users", code: "code", metrics: "trend" })[id];
+const titles = {
+  workspace: "بررسی تغییر",
+  knowledge: "دانش سازمان",
+  report: "گزارش تصمیم",
+  about: "ایده و مسیر آینده",
 };
-const sourceLabels = {github:'مخزن کد', jira:'تیکت‌های توسعه', telemetry:'پایش سرویس‌ها', support:'پشتیبانی مشتری'};
-const kindLabels = {migration:'تعویض اتصال', feature:'قابلیت جدید', performance:'بهبود عملکرد', security:'تغییر امنیتی'};
-const titles = {workspace:'بررسی تغییر', organization:'نمای سازمان', report:'گزارش تصمیم', about:'دربارهٔ ایده'};
-const assumptions = ['تمام داده‌ها و شواهد ساختگی‌اند؛ شاخص اثر، احتمال خرابی نیست.', 'اثر با بیشترین مسیر وزنی در گراف ثابت انتقال می‌یابد. ضریب پایه ۸۲ و ضریب نوع تغییر از فرض‌های دمو هستند.', 'پوشش آزمون و درصد انتشار ضرایب نمایشی‌اند. انتشار تدریجی ضریب ثابت ۰٫۶۲ دارد؛ کاهش حاصل، نتیجهٔ آزمایش واقعی نیست.', 'اوج در روز هفتم و سپس کاهش اثر، الگوی زمانی فرضی است؛ از تاریخچه یاد گرفته نشده است.', 'تعداد کاربران و تأخیر، خروجی قواعد ثابت‌اند. متن آزاد تحلیل نمی‌شود؛ سرویس و تنظیمات صریح مبنای محاسبه‌اند.', 'نتیجه مجوز انتشار نیست؛ در محصول واقعی، دادهٔ زنده، اعتبارسنجی تاریخی و تأیید مسئول انتشار لازم‌اند.'];
-let data, result = null, comparison = null, selectedPreset = 'payment', selectedNode = 'payment', day = 7, view = 'current', tourStep = 0, toastTimer;
-const label = id => data.nodes.find(n => n.id === id)?.label || id;
-const nodeResult = id => result?.nodes.find(n => n.id === id);
-const severity = n => n > 50 ? 'اثر زیاد' : n > 25 ? 'نیازمند بررسی' : n > 1 ? 'اثر محدود' : 'بدون اثر سناریو';
-const color = n => n > 50 ? '#ef7c88' : n > 25 ? '#dca057' : n > 1 ? '#b0a1fa' : '#8b89a3';
-const request = () => ({description:$('description').value, target:$('target').value, kind:$('kind').value, rollout:Number($('rollout').value), testCoverage:Number($('coverage').value), canary:$('canary').checked});
-function isDirty() { return result && JSON.stringify(request()) !== JSON.stringify(result.request); }
-function toast(message) { clearTimeout(toastTimer); $('toast').textContent = message; $('toast').hidden = false; toastTimer = setTimeout(() => { $('toast').hidden = true; }, 4000); }
-function navigate(name, focus = false) {
-  name = Object.hasOwn(titles, name) ? name : 'workspace';
-  document.querySelectorAll('.page').forEach(p => { p.hidden = p.id !== name; });
-  document.querySelectorAll('[data-nav]').forEach(a => { a.classList.toggle('active', a.dataset.nav === name); if (a.dataset.nav === name) a.setAttribute('aria-current','page'); else a.removeAttribute('aria-current'); });
-  $('page-title').textContent = titles[name];
-  if (name === 'report') renderReport();
-  if (focus) { window.scrollTo({top:0, behavior:'instant'}); $('main').focus({preventScroll:true}); }
+const modeDescriptions = {
+  full: "منفعت از ماه اول؛ مواجههٔ هم‌زمان همهٔ کاربران با تغییر.",
+  pilot: "۲۰٪، ۶۰٪ و ۱۰۰٪ در سه ماه؛ فرصت یادگیری با هزینهٔ آزمون بیشتر.",
+  wait: "فرصت تازه به دست نمی‌آید؛ مشکل فعلی هم برطرف نمی‌شود.",
+};
+let original,
+  data,
+  result,
+  scenarioId = "guest",
+  selectedNode = "checkout",
+  decision = null,
+  updateDelta = null,
+  toastTimer,
+  tourStep = 0;
+const node = (id) => data.nodes.find((n) => n.id === id);
+const nodeName = (id) => node(id)?.name || id;
+const sourceName = (id) => data.sources.find((s) => s.id === id)?.name || id;
+const range = (o) => `${fa(o.netLow)} تا ${fa(o.netHigh)}`;
+const riskLabel = (score) =>
+  score === null
+    ? "بدون تغییر تازه"
+    : score >= 60
+      ? "نیازمند بررسی جدی"
+      : score >= 35
+        ? "نیازمند بررسی"
+        : "مواجههٔ محدودتر";
+const evidenceButton = (id) =>
+  `<button class="evidence-link" data-evidence="${esc(id)}">${icon("file")}<span dir="ltr">${esc(id)}</span> · شاهد</button>`;
+function pathMarkup(path) {
+  return `<div class="path">${path.map((id) => `<span>${esc(nodeName(id))}</span>`).join("<i>←</i>")}</div>`;
 }
-function drawPresets() {
-  $('presets').innerHTML = Object.entries(presets).map(([id, p]) => `<button class="preset" type="button" data-preset="${id}" aria-pressed="${selectedPreset === id}"><span class="preset-icon">${icon(id)}</span><span><strong>${p.title}</strong><small>${p.subtitle}</small></span><span class="preset-check" aria-hidden="true"></span></button>`).join('');
+function getRequest() {
+  return {
+    scenarioId,
+    mode: $("launch-mode").value,
+    effect: $("effect").value.trim() === "" ? NaN : Number($("effect").value),
+    note: $("note").value.trim(),
+  };
 }
-function setPreset(id) {
-  selectedPreset = id; const p = presets[id];
-  $('description').value = p.description; $('target').value = p.target; $('kind').value = p.kind;
-  $('rollout').value = p.rollout; $('coverage').value = p.testCoverage; $('canary').checked = p.canary;
-  selectedNode = p.target; result = null; comparison = null; day = 7; view = 'current';
-  drawPresets(); updateForm(); render();
+function dirty() {
+  return (
+    !!result && JSON.stringify(getRequest()) !== JSON.stringify(result.request)
+  );
 }
-function updateForm() {
-  $('rollout-value').textContent = `${fa($('rollout').value)}٪`;
-  $('coverage-value').textContent = `${fa($('coverage').value)}٪`;
-  const dirty = isDirty();
-  $('draft-state').textContent = dirty ? 'تنظیمات تغییر کرده؛ نتیجهٔ نمایش‌داده‌شده مربوط به اجرای قبلی است.' : result ? 'نتیجه برای همین تنظیمات محاسبه شده است.' : 'نمای سازمان آماده است؛ نیازی به ساخت مدل نیست.';
-  $('draft-state').classList.toggle('dirty', Boolean(dirty));
-  $('compare').disabled = !result || Boolean(dirty) || result.request.canary;
-  $('compare').innerHTML = icon('compare') + (result?.request.canary ? 'این سناریو از ابتدا تدریجی است' : dirty ? 'ابتدا تنظیمات جدید را بررسی کنید' : 'مقایسه با انتشار تدریجی');
+function notify(message) {
+  $("toast").textContent = message;
+  $("toast").hidden = false;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => ($("toast").hidden = true), 3800);
 }
-function run() {
+function navigate(id, focus = false) {
+  if (!Object.hasOwn(titles, id)) id = "workspace";
+  document.querySelectorAll(".page").forEach((p) => (p.hidden = p.id !== id));
+  document.querySelectorAll("[data-nav]").forEach((a) => {
+    a.classList.toggle("active", a.dataset.nav === id);
+    if (a.dataset.nav === id) a.setAttribute("aria-current", "page");
+    else a.removeAttribute("aria-current");
+  });
+  $("page-title").textContent = titles[id];
+  if (id === "report") renderReport();
+  if (focus) {
+    $("main").focus({ preventScroll: true });
+    window.scrollTo({ top: 0, behavior: "instant" });
+  }
+}
+function selectScenario(id, announce = true) {
+  const s = scenarioById(data, id);
+  scenarioId = id;
+  selectedNode = s.target;
+  decision = null;
+  updateDelta = null;
+  $("scenario-type").textContent = s.type;
+  $("scenario-title").textContent = s.title;
+  $("scenario-description").textContent = s.description;
+  $("effect-label").textContent = s.effectLabel;
+  $("effect-unit").textContent = s.effectUnit;
+  $("effect").max = s.maxEffect;
+  $("effect").value = s.defaultEffect;
+  $("launch-mode").value = "full";
+  $("note").value = "";
+  $("decision").value = "";
+  $("form-error").hidden = true;
+  run(false);
+  if (announce) notify(`سناریوی «${s.title}» آماده شد.`);
+}
+function drawScenarios() {
+  $("scenarios").innerHTML = data.scenarios
+    .map(
+      (s) =>
+        `<button class="scenario-card ${s.id === scenarioId ? "active" : ""}" data-scenario="${s.id}" aria-pressed="${s.id === scenarioId}"><span class="icon-box">${icon(s.icon)}</span><span><span class="type">${s.type}</span><strong>${s.title}</strong><small>${s.short}</small></span>${s.id === scenarioId ? `<span class="selected-mark">${icon("check")}</span>` : ""}</button>`,
+    )
+    .join("");
+}
+function run(announce = true) {
   try {
-    result = simulate(data, request()); comparison = null; day = 7; view = 'future'; selectedNode = result.request.target;
-    render(); updateForm(); toast('پیامد تغییر محاسبه شد؛ مسیرها و اثر مشتری را ببینید.');
-  } catch (error) { toast(error.message); }
-}
-function pathMarkup(ids) { return `<div class="path-flow" aria-label="مسیر انتقال اثر">${ids.map((id,i) => `${i ? '<i aria-hidden="true">→</i>' : ''}<span>${esc(label(id))}</span>`).join('')}</div>`; }
-function edgePath(a,b) {
-  if (a.x === b.x) {
-    const direction=b.y>a.y?1:-1;
-    return `M${a.x},${a.y+36*direction} L${b.x},${b.y-42*direction}`;
-  }
-  const sx=a.x+82, sy=a.y, ex=b.x-87, ey=b.y, mid=(sx+ex)/2;
-  return `M${sx},${sy} C${mid},${sy} ${mid},${ey} ${ex},${ey}`;
-}
-function renderGraph() {
-  const future = result && view === 'future', factor = future ? atDay(result, day).factor : 0;
-  const selectedPath = future ? nodeResult(selectedNode).path : [];
-  const edges = data.edges.map(e => {
-    const a=data.nodes.find(n=>n.id===e.from), b=data.nodes.find(n=>n.id===e.to);
-    const affected=future && nodeResult(e.from).risk*factor>1;
-    const onPath=selectedPath.some((id,i)=>id===e.from && selectedPath[i+1]===e.to);
-    return `<path d="${edgePath(a,b)}" class="edge ${affected?'affected':''} ${onPath?'selected-edge':''}" marker-end="url(#${onPath?'arrow-selected':affected?'arrow-effect':'arrow'})"/>`;
-  }).join('');
-  const nodes = data.nodes.map(n=>{
-    const score = future ? nodeResult(n.id).risk*factor : 0;
-    return `<g class="node ${selectedNode===n.id?'selected':''}" role="button" tabindex="0" data-node="${n.id}" aria-label="${esc(n.label)}؛ ${future?`${severity(score)}؛ ${fa(score)} از ۱۰۰`:'نمای فعلی'}" aria-pressed="${selectedNode===n.id}" transform="translate(${n.x-82},${n.y-36})"><rect class="node-box" width="164" height="72" rx="11"/><circle class="node-dot" cx="15" cy="16" r="3" style="fill:${color(score)}"/><text class="node-label" x="82" y="32" direction="rtl">${esc(n.label)}</text><text class="node-name" x="82" y="53">${esc(n.name)}</text>${future?`<text class="node-score" x="150" y="17" style="fill:${color(score)}">${fa(score)}</text>`:''}</g>`;
-  }).join('');
-  $('network').innerHTML=`<defs><marker id="arrow" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0 0L6 3L0 6Z" fill="#66647f"/></marker><marker id="arrow-effect" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0 0L6 3L0 6Z" fill="#a89be6"/></marker><marker id="arrow-selected" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0 0L6 3L0 6Z" fill="#e0d7ff"/></marker><pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse"><circle cx="10" cy="10" r=".7" fill="#ffffff0c"/></pattern></defs><rect width="940" height="410" fill="url(#grid)"/>${edges}${nodes}`;
-  $('view-current').setAttribute('aria-pressed', String(view==='current')); $('view-future').setAttribute('aria-pressed', String(view==='future')); $('view-future').disabled=!result;
-  $('map-status').textContent=future?`پیامد نمایشی در روز ${fa(day)}`:'نمای ثابت سازمان نمونه';
-  $('map-subtitle').textContent = future ? 'شاخص اثر از ۱۰۰؛ احتمال خرابی نیست.' : 'روی هر بخش بزنید تا نقش و شواهدش را ببینید.';
-  $('timeline').hidden=!result;
-  if (result) {
-    $('day-buttons').innerHTML=[1,7,14,30].map(d=>`<button type="button" data-day="${d}" aria-pressed="${d===day}">روز ${fa(d)}</button>`).join('');
-    const point = t => `${10+t.day/30*460},${48-t.risk/100*44}`;
-    const line=result.timeline.map(point).join(' '),current=atDay(result,day);
-    $('trajectory').innerHTML=`<defs><linearGradient id="chart-fill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#afa0ef" stop-opacity=".2"/><stop offset="100%" stop-color="#afa0ef" stop-opacity="0"/></linearGradient></defs><line x1="10" y1="48" x2="470" y2="48" stroke="#eee9f7"/><polygon points="10,48 ${line} 470,48" fill="url(#chart-fill)"/><polyline points="${line}" fill="none" stroke="#a18bde" stroke-width="2"/><line x1="${10+day/30*460}" y1="4" x2="${10+day/30*460}" y2="48" stroke="#c7b8e8" stroke-dasharray="3 3"/><circle cx="${10+day/30*460}" cy="${48-current.risk/100*44}" r="3" fill="#7960bc"/>`;
+    result = analyze(data, getRequest());
+    decision = null;
+    updateDelta = null;
+    $("decision").value = "";
+    $("form-error").hidden = true;
+    renderAll();
+    if (announce) notify("پیامدها با فرض‌های فعلی بررسی شدند.");
+  } catch (e) {
+    $("form-error").textContent = e.message;
+    $("form-error").hidden = false;
   }
 }
-function miniEvidence(e) { return `<button class="evidence-mini" data-evidence="${e.id}"><span dir="ltr">${e.id}</span>${esc(e.text)}</button>`; }
-function renderInspector() {
-  const n=data.nodes.find(n=>n.id===selectedNode), info=nodeResult(n.id), future=result && view==='future';
-  const score=future?info.risk*atDay(result,day).factor:0;
-  const evidence=data.evidence.filter(e=>e.node===n.id);
-  $('inspector').innerHTML=`<div class="inspector-body"><div class="selected-service"><div><h3>${esc(n.label)}</h3><small>${esc(n.owner)} · <span dir="ltr">${esc(n.name)}</span></small></div><span class="pill">${future?severity(score):'نمای فعلی'}</span></div><p>${esc(n.description)}. تأخیر پایهٔ نمونه: ${fa(n.latency)} میلی‌ثانیه.</p>${future ? info.path.length ? pathMarkup(info.path)+`<p>${info.path.length===1?'این بخش مستقیماً تغییر می‌کند.':'اثر از مسیر وابستگی بالا به این بخش می‌رسد.'} شاخص روز ${fa(day)}: ${fa(score)} از ۱۰۰.</p>` : '<p>در این سناریو، مسیری برای انتقال اثر به این بخش وجود ندارد.</p>' : '<p>ساختار سازمان آماده است. شواهد زیر زمینهٔ بررسی این بخش را نشان می‌دهند.</p>'}${evidence.length?evidence.map(miniEvidence).join(''):'<p class="empty-inline">برای این بخش، شاهد مستقیم در نمونه ثبت نشده است.</p>'}<a class="text-button inspector-link" href="#organization">دیدن تمام شواهد و منابع ←</a></div>`;
-}
-function customerMessage(c,index) {
-  if(index<=1)return 'در این سناریو اثر قابل توجهی به این گروه نمی‌رسد.';
-  const affected=result.nodes.filter(n=>n.risk>1).map(n=>n.id);
-  if(c.id==='mobile')return affected.includes('payment')?'ممکن است پرداخت و تکمیل خرید با تأخیر یا تلاش مجدد همراه شود.':'ورود و تکمیل خرید ممکن است با تأخیر همراه شود.';
-  if(c.id==='merchants')return 'تأیید سفارش و رزرو موجودی ممکن است دیرتر انجام شود.';
-  return 'گزارش فروش و پیگیری سفارش‌ها ممکن است با تأخیر به‌روز شود.';
-}
-function renderCustomers() {
-  const factor=result?atDay(result,day).factor:0;
-  $('customer-caption').textContent=result?`پیامد فرضی در روز ${fa(day)}؛ تعدادها برآورد دمو هستند`:'پیامد تغییر برای سه گروه مشتری نمونه';
-  $('customers').innerHTML=data.customers.map(c=>{
-    const info=result?.customers.find(x=>x.id===c.id),index=info?info.challengeIndex*factor:0;
-    return `<div class="customer-card"><span class="customer-avatar">${icon(c.id==='mobile'?'mobile':c.id==='merchants'?'store':'users')}</span><div><strong>${esc(c.name)}</strong><small>${fa(c.users)} کاربر نمونه</small><p>${result?customerMessage(c,index):'پس از بررسی تغییر، پیامد برای این گروه نمایش داده می‌شود.'}</p>${result?`<div class="customer-bar"><span style="width:${index}%"></span></div>`:''}</div><div class="customer-score">${result?fa(Math.round(info.exposedUsers*factor)):'—'}<small>کاربر در معرض اثر</small></div></div>`;
-  }).join('');
+function renderDraft() {
+  const pending = dirty();
+  $("draft-state").textContent = pending
+    ? "تنظیمات تغییر کرده‌اند؛ برای نتیجهٔ تازه دوباره بررسی کنید."
+    : `نتیجهٔ ثبت‌شده · نسخهٔ ${fa(result.revision)} دانش سازمان`;
+  $("draft-state").style.color = pending ? "#a56616" : "";
+  renderSummary();
+  document
+    .querySelectorAll("[data-choose-mode]")
+    .forEach(
+      (b) =>
+        (b.disabled = pending || b.dataset.chooseMode === result.request.mode),
+    );
 }
 function renderSummary() {
-  $('metrics').hidden=!result;
-  $('result-summary').classList.toggle('has-result', Boolean(result));
-  if (!result) {$('result-summary').innerHTML=`<span class="summary-icon">${icon('spark')}</span><div><h2>اثر یک تغییر، به همان سرویس محدود نمی‌ماند.</h2><p>«بررسی پیامد تغییر» را بزنید؛ مسیرهای درگیر و تجربهٔ مشتری اینجا روشن می‌شوند.</p></div>`;return;}
-  const t=atDay(result,day),affected=result.nodes.filter(n=>n.risk*t.factor>1).length;
-  $('result-summary').innerHTML=`<span class="summary-icon">${icon('route')}</span><div><h2>تغییر در ${esc(label(result.request.target))}، به ${fa(Math.max(0,affected-1))} بخش دیگر هم می‌رسد.</h2><p>روز ${fa(day)}: ${severity(t.risk)}. اثر را روی نقشه دنبال کنید و پیش از انتشار، مسیرهای حساس را بررسی کنید.</p></div><a class="text-button" style="margin-right:auto;white-space:nowrap" href="#report">گزارش تصمیم ←</a>`;
-  const metrics=[['شاخص اثر سناریو',fa(t.risk),'از ۱۰۰ · احتمال خرابی نیست','alert'],['بخش‌های تحت تأثیر',fa(affected),'از ۸ سرویس سازمان نمونه','network'],['کاربران در معرض اثر',fa(t.exposedUsers),'برآورد نمایشی · کاربر','users'],['افزایش تأخیر مسیر',fa(t.latencyDelta),'میلی‌ثانیه · فرض دمو','clock']];
-  $('metrics').innerHTML=metrics.map(m=>`<div class="metric">${icon(m[3])}<span class="metric-label">${m[0]} · روز ${fa(day)}</span><strong>${m[1]}</strong><small>${m[2]}</small></div>`).join('');
+  const s = result.scenario,
+    o = result.selected;
+  let headline =
+    o.id === "wait"
+      ? "تغییر را عقب می‌اندازیم؛ مسئلهٔ امروز باقی می‌ماند."
+      : o.netHigh < 0
+        ? "با این فرض‌ها، هزینه از منفعت سه‌ماهه بیشتر است."
+        : o.netLow < 0
+          ? "این تغییر به آزمون فرض منفعت نیاز دارد."
+          : o.id === "pilot"
+            ? "شروع محدود، فرصت یادگیری پیش از گسترش می‌دهد."
+            : "فرصت ایجاد ارزش داریم؛ وابستگی‌ها را پیش از اجرا بررسی کنیم.";
+  $("decision-summary").innerHTML =
+    `<div class="summary-topline"><span>${icon("compass")} خلاصهٔ تصمیم</span><span class="pill ${dirty() ? "dirty-badge" : ""}">${dirty() ? "نتیجهٔ اجرای قبلی" : `نسخهٔ ${fa(result.revision)} · دادهٔ فرضی`}</span></div><p class="summary-eyebrow">${esc(s.title)} / ${MODES[o.id].name}</p><h2>${headline}</h2><p class="summary-copy">${o.id === "wait" ? "در این گزینه توسعه و منفعت تازه‌ای در سه ماه نداریم. مسئله‌های موجود و هزینهٔ فرصت در عدد خالص محاسبه نشده‌اند." : `بازهٔ منفعت خالص سه‌ماهه، با فرض فعلی: ${range(o)} میلیون تومان. این عدد پس از هزینهٔ ساخت و اجراست؛ زیان اختلال و اشتراک TwinSight در آن نیست.`}</p><div class="summary-customer">${icon("users")}<span>${esc(s.customer)}</span></div><div class="summary-bottom"><p>${result.updateRelevant ? "تیکت تازهٔ درگاه به تحلیل اضافه شده است." : `تحلیل بر پایهٔ ${fa(result.evidence.length)} شاهد نمونه و فرض‌های قابل مشاهده است.`}</p><a href="#report">گزارش تصمیم ${icon("arrow")}</a></div>`;
 }
-function renderComparison() {
-  $('comparison').hidden=!comparison;
-  if(!comparison)return;
-  const reduction=Math.round((1-comparison.overallRisk/result.overallRisk)*100);
-  $('comparison').innerHTML=`<div class="comparison-result"><div><h3>روش انتشار فعلی</h3><strong>${fa(result.overallRisk)}</strong><small>شاخص اوج اثر · روز هفتم</small></div><div><h3>همان تغییر، با انتشار تدریجی</h3><strong>${fa(comparison.overallRisk)}</strong><small>شاخص اوج اثر · روز هفتم</small></div><div class="reduction"><h3>کاهش در فرض‌های این دمو</h3><strong>${fa(reduction)}٪</strong><small>با ضریب ثابت انتشار تدریجی</small></div><p class="comparison-footnote">شرح تغییر، درصد کاربران و پوشش آزمون یکسان‌اند. تنها انتشار تدریجی فعال شده است؛ این کاهش، نتیجهٔ واقعی یا تضمین انتشار نیست.</p></div>`;
+function renderImpacts() {
+  const o = result.selected;
+  $("impact-cards").innerHTML =
+    `<article class="impact-card opportunity"><div class="impact-top"><span>منفعت خالص سه‌ماهه</span>${icon("trend")}</div><div class="impact-number">${range(o)}<small> میلیون تومان</small></div><p>بازهٔ فرضی پس از هزینهٔ ساخت و اجرا</p></article><article class="impact-card risk"><div class="impact-top"><span>شاخص مواجهه با ریسک</span>${icon("shield")}</div><div class="impact-number">${o.risk === null ? "—" : fa(o.risk)}<small>${o.risk === null ? " تغییر تازه‌ای اجرا نمی‌شود" : " از ۱۰۰"}</small></div><p>${riskLabel(o.risk)} · احتمال خرابی نیست</p></article><article class="impact-card"><div class="impact-top"><span>بخش‌های مرتبط با تغییر</span>${icon("network")}</div><div class="impact-number">${fa(result.affected.length)}<small> از ${fa(data.nodes.length)} بخش</small></div><p>وابستگی‌ها و مسیرهای نیازمند بررسی</p></article>`;
 }
-function render() { renderGraph();renderInspector();renderCustomers();renderSummary();renderComparison();updateForm(); }
-function renderOrganization() {
-  $('source-cards').innerHTML=data.sources.map(s=>`<article class="panel source-card"><div class="source-logo">${icon(s.id==='github'?'layers':s.id==='jira'?'file':s.id==='telemetry'?'analytics':'users')}</div><h3>${sourceLabels[s.id]} <small dir="ltr">/ ${s.name}</small></h3><p>${esc(s.description)}</p><strong>${fa(s.records)}</strong><small>رکورد ساختگی · از قبل آماده</small></article>`).join('');
-  $('service-cards').innerHTML=data.nodes.map(n=>`<button class="service-card" data-service="${n.id}">${icon('route')}<strong>${esc(n.label)}</strong><small>${esc(n.owner)} · <span dir="ltr">${esc(n.name)}</span></small><p>${esc(n.description)}</p></button>`).join('');
-  $('source-filter').innerHTML='<option value="all">همهٔ منابع</option>'+data.sources.map(s=>`<option value="${s.id}">${sourceLabels[s.id]}</option>`).join('');
+function graphEdge(e) {
+  const a = node(e.from),
+    b = node(e.to),
+    active =
+      result.affected.some((n) => n.id === a.id) &&
+      result.affected.some((n) => n.id === b.id);
+  const sameRow = a.y === b.y;
+  const down = b.y > a.y;
+  const fromX = sameRow ? a.x - 75 : a.x,
+    fromY = sameRow ? a.y + 33 : down ? a.y + 67 : a.y,
+    toX = sameRow ? b.x + 75 : b.x,
+    toY = sameRow ? b.y + 33 : down ? b.y - 2 : b.y + 69;
+  const d = sameRow
+    ? `M${fromX} ${fromY} H${toX}`
+    : a.x === b.x
+      ? `M${fromX} ${fromY} V${toY}`
+      : `M${fromX} ${fromY} C${fromX} ${(fromY + toY) / 2},${toX} ${(fromY + toY) / 2},${toX} ${toY}`;
+  return `<path class="graph-edge ${active ? "active" : ""}" d="${d}" marker-end="url(#arrow-${active ? "active" : "normal"})"/>`;
+}
+function renderGraph() {
+  $("model-version").textContent = `نسخهٔ ${fa(data.revision)}`;
+  $("network").innerHTML =
+    `<defs><marker id="arrow-normal" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0 10 5 0 10" fill="#d4dce8"/></marker><marker id="arrow-active" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0 10 5 0 10" fill="#96aaec"/></marker></defs>${data.edges.map(graphEdge).join("")}${data.nodes
+      .map((n) => {
+        const target = n.id === result.scenario.target,
+          affected = result.affected.some((a) => a.id === n.id);
+        return `<g class="graph-node ${target ? "target" : affected ? "affected" : ""} ${selectedNode === n.id ? "selected" : ""}" data-node="${n.id}" tabindex="0" role="button" aria-label="${n.name}؛ ${target ? "محل تغییر" : affected ? "مرتبط با تغییر" : "خارج از دامنه"}" aria-pressed="${selectedNode === n.id}"><rect x="${n.x - 75}" y="${n.y}" width="150" height="67" rx="10"/><text x="${n.x}" y="${n.y + 29}">${n.name}</text><text class="node-en" x="${n.x}" y="${n.y + 49}">${n.en}</text></g>`;
+      })
+      .join("")}`;
+  renderInspector();
+}
+function renderInspector() {
+  const n = node(selectedNode),
+    a = result.affected.find((a) => a.id === n.id);
+  $("inspector").innerHTML =
+    `<div class="inspector-top"><strong>${esc(n.name)}</strong><span class="pill">${esc(n.owner)}</span></div><p>${esc(n.description)} · ${a ? "مرتبط با سناریوی جاری" : "در این سناریوی آماده، خارج از دامنهٔ تغییر است."}</p>${a ? pathMarkup(a.path) : ""}`;
+}
+function renderOpportunity() {
+  const s = result.scenario,
+    o = result.selected;
+  $("opportunity").innerHTML =
+    `<span class="pill green">فرصت مبتنی بر فرض</span><p class="opportunity-copy">${esc(s.opportunity)}</p>${evidenceButton(s.opportunityEvidence)}<div class="money-breakdown"><div class="money-row"><span>منفعت ناخالص سه‌ماهه</span><strong>${fa(o.benefit)} میلیون</strong></div><div class="money-row"><span>ساخت و اجرای سه‌ماهه</span><strong>${fa(o.cost)} میلیون</strong></div><div class="money-row"><span>${s.effectLabel}</span><strong>${fa(result.request.effect)} ${s.effectUnit}</strong></div></div><p class="basis">مبنای منفعت: ${esc(s.basis)}.</p><p class="hint">منفعت ناخالص، برآورد مرکزی سناریو است. بازهٔ خالص با ۶۰٪ تا ۱۲۰٪ همین منفعت، پس از هزینه محاسبه می‌شود.</p>`;
+}
+function renderOptions() {
+  $("options").innerHTML = result.options
+    .map(
+      (o) =>
+        `<article class="option-card ${o.id === result.request.mode ? "chosen" : ""}"><div class="option-heading"><h3>${o.name}</h3>${o.id === result.request.mode ? '<span class="pill blue">گزینهٔ جاری</span>' : ""}</div><div class="option-number">${range(o)}</div><div class="option-unit">میلیون تومان · منفعت خالص سه‌ماهه</div><div class="option-details"><div><small>شاخص ریسک تغییر</small><strong>${o.risk === null ? "—" : `${fa(o.risk)} / ۱۰۰`}</strong></div><div><small>هزینهٔ سه‌ماهه</small><strong>${fa(o.cost)} میلیون</strong></div></div><p>${modeDescriptions[o.id]}</p><button class="button ${o.id === result.request.mode ? "primary" : ""}" data-choose-mode="${o.id}">${o.id === result.request.mode ? "بررسی‌شده با این روش" : "بررسی با این روش"}</button></article>`,
+    )
+    .join("");
+}
+function renderRisks() {
+  const s = result.scenario;
+  $("risks").innerHTML =
+    s.risks
+      .map(
+        (r) =>
+          `<div class="risk-item"><h3>${esc(r.title)}</h3><p>${esc(r.text)}</p>${evidenceButton(r.evidenceId)}</div>`,
+      )
+      .join("") +
+    (result.updateRelevant
+      ? `<div class="risk-item"><h3>تأخیر درگاه و تلاش مجدد مشتری</h3><p>تیکت تازه، نیاز به آزمون تلاش مجدد و تطبیق سفارش را برجسته می‌کند. افزایش شاخص و هزینه، فرض تعریف‌شدهٔ این دمو است.</p>${evidenceButton(data.update.id)}</div>`
+      : "");
+  $("questions").innerHTML =
+    s.questions
+      .map(
+        (q, i) =>
+          `<div class="question-item"><span class="question-number">۰${i + 1}</span><p>${esc(q)}</p></div>`,
+      )
+      .join("") +
+    `<div class="test-note"><strong>کوچک‌ترین آزمون بعدی</strong>${esc(s.test)}</div><div class="test-note"><strong>معیار توقف پیشنهادی</strong>${esc(s.stop)}</div>`;
+}
+function renderDecision() {
+  $("decision-status").textContent = decision
+    ? `تصمیم ثبت‌شده: ${decision.label} · نسخهٔ ${fa(decision.revision)}. این ثبت فقط در همین صفحه نگه داشته می‌شود.`
+    : "تصمیمی ثبت نشده است. با هر بررسی تازه، تصمیم قبلی نیاز به بازبینی دارد.";
+}
+function renderUpdate() {
+  const banner = $("update-banner");
+  banner.hidden = !updateDelta;
+  if (updateDelta)
+    banner.innerHTML = `${icon("refresh")}<p>تیکت تازه وارد شد؛ ${updateDelta.changed ? `شاخص ریسک از ${fa(updateDelta.before)} به ${fa(updateDelta.after)} رسید و هزینهٔ آزمون اضافه شد.` : "در این سناریو یا روش اجرا، عددها تغییر نکردند."} دانش سازمان به نسخهٔ ${fa(data.revision)} رسید.</p><a href="#knowledge">دیدن شاهد تازه ←</a>`;
+}
+function renderAll() {
+  drawScenarios();
+  renderSummary();
+  renderImpacts();
+  renderGraph();
+  renderOpportunity();
+  renderOptions();
+  renderRisks();
+  renderDecision();
+  renderUpdate();
+  renderDraft();
+}
+function renderKnowledge() {
+  $("knowledge-revision").textContent = fa(data.revision);
+  $("source-cards").innerHTML = data.sources
+    .map(
+      (s) =>
+        `<article class="panel source-card"><span class="icon-box">${icon(sourceIcon(s.id))}</span><span class="en-source" dir="ltr">${s.en}</span><h3>${s.name}</h3><p>${s.description}</p><div class="source-count"><strong>${fa(s.count)}</strong><small>رکورد فرضی</small></div></article>`,
+    )
+    .join("");
+  const filter = $("source-filter").value;
+  $("source-filter").innerHTML =
+    '<option value="all">همهٔ منابع</option>' +
+    data.sources
+      .map((s) => `<option value="${s.id}">${s.name}</option>`)
+      .join("");
+  $("source-filter").value = filter || "all";
+  $("add-ticket").disabled = data.revision > 1;
+  $("add-ticket").innerHTML =
+    `${icon(data.revision > 1 ? "check" : "refresh")}${data.revision > 1 ? "تیکت نمونه وارد شد" : "ورود تیکت نمونه"}`;
   renderEvidence();
 }
 function renderEvidence() {
-  const q=$('evidence-search').value.trim().toLocaleLowerCase(),source=$('source-filter').value;
-  const items=data.evidence.filter(e=>(source==='all'||e.source===source)&&`${e.id} ${e.text} ${label(e.node)} ${sourceLabels[e.source]}`.toLocaleLowerCase().includes(q));
-  $('evidence-count').textContent=`${fa(items.length)} شاهد نمونه`;
-  $('evidence-list').innerHTML=items.length?items.map(e=>`<div class="evidence-row"><span class="evidence-id" dir="ltr">${e.id}</span><div class="evidence-text"><p>${esc(e.text)}</p><small>${sourceLabels[e.source]} · ${esc(label(e.node))}</small></div><button class="button" data-evidence="${e.id}">جزئیات ←</button></div>`).join(''):'<p class="empty-inline">شاهدی با این عبارت پیدا نشد؛ جست‌وجو یا فیلتر را تغییر دهید.</p>';
+  const q = $("evidence-search").value.trim().toLocaleLowerCase(),
+    filter = $("source-filter").value;
+  const items = data.evidence.filter(
+    (e) =>
+      (filter === "all" || e.source === filter) &&
+      `${e.id} ${e.title} ${e.text}`.toLocaleLowerCase().includes(q),
+  );
+  $("evidence-count").textContent = `${fa(items.length)} شاهد`;
+  $("evidence-list").innerHTML = items.length
+    ? items
+        .map(
+          (e) =>
+            `<div class="evidence-row"><span class="evidence-id" dir="ltr">${e.id}</span><div><strong>${esc(e.title)}</strong><p>${esc(e.text)}</p><small>${sourceName(e.source)} · ${esc(nodeName(e.node))}</small></div><button class="button" data-evidence="${e.id}">جزئیات ←</button></div>`,
+        )
+        .join("")
+    : '<p class="hint">شاهدی پیدا نشد؛ عبارت یا منبع جست‌وجو را تغییر دهید.</p>';
 }
 function openEvidence(id) {
-  const e=data.evidence.find(e=>e.id===id);if(!e)return;
-  $('detail-content').innerHTML=`<h2>${sourceLabels[e.source]} / ${esc(label(e.node))}</h2><p>${esc(e.text)}</p><p class="detail-meta">شناسه: <b dir="ltr">${e.id}</b> · ${data.snapshot.label} · ${data.snapshot.date}</p><p class="detail-note">این یک شاهد ساختگی برای نمایش ایده است. در نسخهٔ واقعی، این قسمت به سند یا رخداد اصلی و زمان آخرین دریافت آن پیوند دارد.</p>`;
-  $('detail-dialog').showModal();
+  const e = data.evidence.find((e) => e.id === id);
+  if (!e) return;
+  $("evidence-detail").innerHTML =
+    `<h2>${esc(e.title)}</h2><p>${esc(e.text)}</p><div class="detail-source"><span dir="ltr">${e.id}</span> · ${sourceName(e.source)} · ${esc(nodeName(e.node))}</div><p class="hint">این شاهد ساختگی است. در محصول واقعی، این قسمت به رکورد اصلی، زمان دریافت و مجوز دسترسی متصل خواهد شد.</p>`;
+  $("evidence-dialog").showModal();
 }
-function mitigations() {
-  return [`مسیر ${result.nodes.filter(n=>n.path.length>1).length?result.nodes.filter(n=>n.path.length>1).sort((a,b)=>b.risk-a.risk)[0].path.map(label).join(' ← '):label(result.request.target)} را پیش از انتشار بررسی کنید.`, 'انتشار را ابتدا محدود و تدریجی انجام دهید؛ معیار توقف و امکان بازگشت مشخص باشد.', 'شاخص خطای سرویس و تیکت‌های مشتری را با خط پایه مقایسه کنید؛ تصمیم نهایی با مسئول انتشار است.'];
+function addTicket(announce = true) {
+  if (data.revision > 1) return;
+  // Recalculate the last registered request, preserving any unsubmitted draft in the form.
+  const before = result.selected.risk;
+  data = applyUpdate(data);
+  result = analyze(data, result.request);
+  decision = null;
+  $("decision").value = "";
+  updateDelta = {
+    before,
+    after: result.selected.risk,
+    changed: before !== result.selected.risk,
+  };
+  renderKnowledge();
+  renderAll();
+  $("knowledge-update-status").hidden = false;
+  $("knowledge-update-status").innerHTML =
+    `${icon("check")}<p>شاهد <b dir="ltr">${data.update.id}</b> اضافه شد. تحلیل ثبت‌شده با نسخهٔ ${fa(data.revision)} دوباره محاسبه شد؛ تنظیمات ارسال‌نشده همچنان پیش‌نویس‌اند.</p><a href="#workspace">دیدن پیامد تازه ←</a>`;
+  if (announce) notify("تیکت نمونه وارد شد و تحلیل ثبت‌شده به‌روز شد.");
+}
+function saveDecision() {
+  if (dirty()) {
+    notify("ابتدا تغییرهای فرم را بررسی کنید، سپس تصمیم را ثبت کنید.");
+    return;
+  }
+  if (!$("decision").value) {
+    notify("یک تصمیم اولیه انتخاب کنید.");
+    return;
+  }
+  decision = {
+    value: $("decision").value,
+    label: $("decision").selectedOptions[0].textContent,
+    revision: result.revision,
+    createdAt: new Date().toISOString(),
+  };
+  renderDecision();
+  notify("تصمیم اولیهٔ تیم ثبت شد.");
 }
 function renderReport() {
-  if(!result){$('report-content').innerHTML=`<div class="empty-panel">${icon('file')}<h2>اول یک تغییر را بررسی کنید.</h2><p>پس از اجرای سناریو، گزارش مسیر اثر و پیشنهادهای انتشار اینجا آماده می‌شود.</p><a class="button primary" href="#workspace">رفتن به بررسی تغییر ←</a></div>`;return;}
-  const r=result.request,t=atDay(result,day);
-  const affected=result.nodes.filter(n=>n.risk>1).sort((a,b)=>b.risk-a.risk);
-  $('report-content').innerHTML=`<article class="panel report-card"><div class="report-heading"><div><h2>تغییر در ${esc(label(r.target))}</h2><p>سپهر تجارت · سازمان ساختگی · ${data.snapshot.label}</p></div><span class="pill">${isDirty()?'اجرای قبلی':'نتیجهٔ سناریو'}</span></div><p class="report-description">${esc(r.description)}</p><div class="report-settings"><span>${kindLabels[r.kind]}</span><span>انتشار برای ${fa(r.rollout)}٪ کاربران</span><span>پوشش آزمون ${fa(r.testCoverage)}٪</span><span>${r.canary?'انتشار تدریجی':'انتشار یک‌مرحله‌ای'}</span><span>روز ${fa(day)}</span></div>${isDirty()?'<div class="info-strip"><p>تنظیمات فرم تغییر کرده‌اند. این گزارش مربوط به آخرین اجرای ثبت‌شده است، نه تنظیمات جدید.</p></div>':''}<div class="report-stats"><div><strong>${fa(t.risk)}</strong><small>شاخص اثر در روز انتخابی / ۱۰۰</small></div><div><strong>${fa(t.exposedUsers)}</strong><small>کاربر در معرض اثر · برآورد دمو</small></div><div><strong>${fa(t.latencyDelta)}</strong><small>افزایش تأخیر · میلی‌ثانیه</small></div></div><div class="report-paths"><h3>مسیرهای انتقال اثر</h3>${affected.map(n=>pathMarkup(n.path)).join('')}</div>${comparison?`<div class="info-strip"><div><strong>مقایسهٔ انتشار در روز هفتم</strong><p>شاخص اوج فعلی: ${fa(result.overallRisk)}؛ با انتشار تدریجی: ${fa(comparison.overallRisk)}. با همان ورودی‌ها و ضریب فرضی ۰٫۶۲.</p></div></div>`:''}<div class="report-actions"><button class="button primary" data-action="export">${icon('download')}دریافت گزارش JSON</button><button class="button" data-action="print">${icon('print')}چاپ یا ذخیرهٔ PDF</button><a class="button" href="#workspace">بازگشت به سناریو</a></div></article><article class="panel report-card"><h2>پیش از انتشار چه چیزی را بررسی کنیم؟</h2><ol class="decision-list">${mitigations().map(m=>`<li>${esc(m)}</li>`).join('')}</ol><div class="report-evidence"><h3>شواهد مرتبط با مسیرهای درگیر</h3>${data.evidence.filter(e=>result.evidenceIds.includes(e.id)).map(miniEvidence).join('')}</div><details class="report-limits"><summary>فرض‌ها و محدودیت‌های محاسبه</summary><ul class="assumptions">${assumptions.map(a=>`<li>${a}</li>`).join('')}</ul></details></article>`;
+  const s = result.scenario,
+    o = result.selected;
+  $("report-content").innerHTML =
+    `<article class="panel report-card"><div class="panel-heading"><h2>${esc(s.title)}</h2><span class="pill blue">دادهٔ فرضی · محاسبهٔ سناریو</span></div><p class="report-note">${esc(s.description)}</p><div class="report-meta"><span class="pill">سپهر تجارت · سازمان نمونه</span><span class="pill">نسخهٔ ${fa(result.revision)} دانش سازمان</span><span class="pill">${o.name}</span><span class="pill">افق سه‌ماهه</span></div>${dirty() ? '<p class="report-note">تنظیمات فرم تغییر کرده‌اند؛ این گزارش مربوط به آخرین بررسی ثبت‌شده است.</p>' : ""}<div class="report-kpis"><div><strong>${range(o)}</strong><small>میلیون تومان · منفعت خالص فرضی</small></div><div><strong>${o.risk === null ? "—" : fa(o.risk)}</strong><small>شاخص ریسک / ۱۰۰؛ احتمال نیست</small></div><div><strong>${fa(o.cost)}</strong><small>میلیون تومان · هزینهٔ ساخت و اجرا</small></div></div><p class="report-note"><b>منفعت:</b> ${esc(s.opportunity)}</p><p class="report-note"><b>تجربهٔ مشتری:</b> ${esc(s.customer)}</p><p class="report-note"><b>تصمیم تیم:</b> ${decision ? esc(decision.label) : "هنوز ثبت نشده است."}</p>${result.request.note ? `<p class="report-note"><b>یادداشت:</b> ${esc(result.request.note)}</p>` : ""}</article><article class="panel report-card"><h2>مقایسهٔ روش اجرا</h2><div class="report-table-scroll"><table class="report-table"><caption>واحد پول: میلیون تومان؛ همهٔ اعداد فرضی‌اند.</caption><thead><tr><th>روش اجرا</th><th>منفعت ناخالص</th><th>هزینه</th><th>بازهٔ خالص</th><th>شاخص ریسک</th></tr></thead><tbody>${result.options.map((x) => `<tr><td>${x.name}</td><td>${fa(x.benefit)}</td><td>${fa(x.cost)}</td><td>${range(x)}</td><td>${x.risk === null ? "—" : fa(x.risk)}</td></tr>`).join("")}</tbody></table></div></article><article class="panel report-card"><h2>ریسک‌ها، آزمون و اطلاعات موردنیاز</h2><ul class="report-list">${s.risks.map((r) => `<li><b>${esc(r.title)}:</b> ${esc(r.text)} (${r.evidenceId})</li>`).join("")}${result.updateRelevant ? `<li>تیکت تازهٔ تأخیر درگاه، آزمون تلاش مجدد را ضروری‌تر می‌کند (${data.update.id}).</li>` : ""}${s.questions.map((q) => `<li>${esc(q)}</li>`).join("")}</ul><p class="report-note"><b>آزمون بعدی:</b> ${esc(s.test)}</p><p class="report-note"><b>معیار توقف:</b> ${esc(s.stop)}</p></article><article class="panel report-card"><h2>شواهد و فرض‌های محاسبه</h2><ul class="report-list">${result.evidence.map((e) => `<li><b dir="ltr">${e.id}</b> — ${esc(e.title)}: ${esc(e.text)}</li>`).join("")}</ul><p class="report-note">${esc(s.basis)}؛ فرض اثر ${fa(result.request.effect)} ${s.effectUnit}. خط پایه: ${fa(s.units)} ${s.unitLabel} و ${fa(s.unitValue)} تومان برای هر واحد.</p><p class="report-note">هزینهٔ ساخت ${fa(s.buildCost)}، اجرای ماهانه ${fa(s.monthlyOps)} و آزمون پایلوت ${fa(s.pilotCost)} میلیون تومان. هزینهٔ تیکت تازه: ${fa(result.assumptions.extraCost)} میلیون تومان. پایلوت در سه ماه، به‌ترتیب ۲۰٪، ۶۰٪ و ۱۰۰٪ دامنه را پوشش می‌دهد.</p><p class="report-note">بازهٔ خالص = ۶۰٪ تا ۱۲۰٪ منفعت مرکزی، منهای هزینه. شاخص ریسک از ضریب ثابت سناریو و روش انتشار محاسبه می‌شود؛ این ضریب هنوز با رخداد واقعی سنجیده نشده است.</p><p class="report-note"><b>حدود نمونه:</b> ${esc(result.assumptions.notice)} هیچ AI یا اتصال زنده‌ای اجرا نمی‌شود. تصمیم نهایی با انسان است.</p></article>`;
 }
 function exportReport() {
-  if(!result)return;
-  const report={product:'TwinSight',team:'BridgeX',notice:data.notice,snapshot:data.snapshot,organization:data.organization,scenario:result,selectedDay:day,daySummary:atDay(result,day),comparison,sourceRecords:data.sources,evidence:data.evidence.filter(e=>result.evidenceIds.includes(e.id)),mitigations:mitigations(),assumptions};
-  const blob=new Blob([JSON.stringify(report,null,2)],{type:'application/json;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');
-  a.href=url;a.download='TwinSight-demo-report.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);toast('گزارش سناریوی اجراشده دریافت شد.');
+  const payload = {
+    product: "TwinSight",
+    team: "BridgeX",
+    organization: data.organization,
+    notice:
+      "تمام داده‌ها فرضی‌اند. تحلیل با قواعد سناریوی آماده انجام می‌شود؛ پیش‌بینی AI نیست.",
+    analysis: result,
+    humanDecision: decision,
+  };
+  const url = URL.createObjectURL(
+    new Blob([JSON.stringify(payload, null, 2)], {
+      type: "application/json;charset=utf-8",
+    }),
+  );
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `TwinSight-${result.request.scenarioId}-report.json`;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  notify("گزارش آخرین بررسی دریافت شد.");
 }
-const tourSteps=[
-  {title:'یک تغییر، چند پیامد',copy:'فرض کنید تیم مالی می‌خواهد درگاه پرداخت را عوض کند. TwinSight نشان می‌دهد این تصمیم چطور از پرداخت به سفارش، انبار و تجربهٔ مشتری می‌رسد.',page:'workspace'},
-  {title:'دانش سازمان از قبل آماده است',copy:'منابع و شواهد را اینجا می‌بینید. برای هر تصمیم، مدل سازمان را دوباره نمی‌سازیم؛ سناریوی تغییر را روی همین نمای مشترک بررسی می‌کنیم.',page:'organization'},
-  {title:'حالا اثر تغییر را ببینید',copy:'سناریوی تعویض درگاه با انتشار برای همهٔ کاربران اجرا شده است. روی گزارش فروش در نقشه بزنید؛ مسیر پرداخت ← سفارش‌ها ← گزارش فروش و شواهد آن قابل بررسی است.',page:'workspace'},
-  {title:'روش انتشار را مقایسه کنید',copy:'همان سناریو با انتشار تدریجی مقایسه شده است. شاخص اوج اثر از ۵۹٫۹ به ۳۷٫۱ می‌رسد؛ این اعداد از فرض‌های دمو می‌آیند و پیش‌بینی واقعی نیستند.',page:'workspace'},
-  {title:'تصمیم با تیم انتشار می‌ماند',copy:'گزارش، مسیرهای حساس و بررسی‌های پیشنهادی را یک‌جا جمع می‌کند. خروجی را دریافت کنید یا به سناریوها برگردید. هیچ تغییری در سازمان واقعی انجام نمی‌شود.',page:'report'},
+function reset(announce = true) {
+  data = structuredClone(original);
+  decision = null;
+  updateDelta = null;
+  $("evidence-search").value = "";
+  $("source-filter").value = "all";
+  $("knowledge-update-status").hidden = true;
+  document.querySelector(".assumption-editor").open = false;
+  renderKnowledge();
+  selectScenario("guest", false);
+  location.hash = "workspace";
+  navigate("workspace", true);
+  if (announce) notify("داده‌ها و تصمیم‌ها به ابتدای دمو برگشتند.");
+}
+const tour = [
+  {
+    page: "workspace",
+    title: "یک تغییر، یک تصمیم کسب‌وکار",
+    copy: "فرض کنید می‌خواهیم خرید بدون ثبت‌نام را اضافه کنیم. TwinSight فرصت فروش بیشتر را کنار ریسک سفارش و پرداخت نشان می‌دهد. این نمونه با دادهٔ فرضی کار می‌کند.",
+  },
+  {
+    page: "workspace",
+    title: "سود و ریسک را کنار هم ببینید",
+    copy: "منفعت از حجم خرید و فرض افزایش نرخ تکمیل خرید محاسبه می‌شود. هزینهٔ ساخت و اجرا جداست. نقشه نشان می‌دهد تغییر به کدام بخش‌ها وابسته است؛ عدد ریسک، احتمال خرابی نیست.",
+  },
+  {
+    page: "workspace",
+    title: "روش اجرا، نتیجه را عوض می‌کند",
+    copy: "شروع محدود را با انتشار کامل مقایسه کنید. پایلوت مواجههٔ کمتری دارد، اما منفعتش دیرتر حاصل می‌شود و آزمون بیشتری می‌خواهد. هیچ گزینه‌ای بدون Trade-off نیست.",
+  },
+  {
+    page: "knowledge",
+    title: "دانش تازه، تحلیل تازه",
+    copy: "یک تیکت نمونه دربارهٔ تأخیر درگاه اضافه شده است. دانش سازمان و تحلیل سناریوی خرید به‌روز می‌شوند. در محصول آینده، AI این کار را با دریافت مجاز تغییرهای بک‌لاگ و تیکت انجام خواهد داد.",
+  },
+  {
+    page: "report",
+    title: "تصمیم و مسئولیت با انسان است",
+    copy: "گزارش، گزینه‌ها، شواهد و فرض‌ها را جمع می‌کند. تیم می‌تواند تحلیل را بررسی و تصمیم اولیه را ثبت کند. این دمو هیچ تغییری در سازمان واقعی اجرا نمی‌کند.",
+  },
 ];
 function showTourStep() {
-  const s=tourSteps[tourStep];
-  if(tourStep===2){setPreset('payment');run();selectedNode='analytics';render();}
-  if(tourStep===3){if(!result||result.request.target!=='payment'||result.request.canary||isDirty()){setPreset('payment');run();}comparison=simulate(data,{...result.request,canary:true});renderComparison();}
-  history.replaceState(null,'',`#${s.page}`);navigate(s.page);window.scrollTo({top:tourStep===3?$('compare-section').offsetTop-120:tourStep===2?$('scenario-form').offsetTop-120:0,behavior:'instant'});
-  $('tour-step').textContent=`راهنمای ارائه · ${fa(tourStep+1)} از ${fa(tourSteps.length)}`;$('tour-title').textContent=s.title;$('tour-copy').textContent=s.copy;
-  $('tour-back').disabled=tourStep===0;$('tour-next').textContent=tourStep===tourSteps.length-1?'پایان راهنما':'بعدی ←';
-  $('tour-dots').innerHTML=tourSteps.map((_,i)=>`<i class="${i===tourStep?'active':''}"></i>`).join('');
+  const t = tour[tourStep];
+  if (tourStep === 2) {
+    $("launch-mode").value = "pilot";
+    run(false);
+  }
+  if (tourStep === 3) addTicket(false);
+  location.hash = t.page;
+  navigate(t.page, true);
+  $("tour-counter").textContent =
+    `نمایش ایده · ${fa(tourStep + 1)} از ${fa(tour.length)}`;
+  $("tour-title").textContent = t.title;
+  $("tour-copy").textContent = t.copy;
+  $("tour-back").disabled = tourStep === 0;
+  $("tour-next").textContent =
+    tourStep === tour.length - 1 ? "پایان راهنما" : "بعدی ←";
+  $("tour-dots").innerHTML = tour
+    .map((_, i) => `<i class="${i === tourStep ? "active" : ""}"></i>`)
+    .join("");
 }
-function reset() { setPreset('payment');history.replaceState(null,'','#workspace');navigate('workspace',true);$('scenario-form').querySelector('details').open=false;toast('دمو به حالت اولیه برگشت.'); }
-function bindEvents() {
-  window.addEventListener('hashchange',()=>navigate(location.hash.slice(1),true));
-  $('scenario-form').addEventListener('submit',e=>{e.preventDefault();run();});
-  $('scenario-form').addEventListener('input',()=>{selectedPreset=null;drawPresets();updateForm();});
-  $('scenario-form').addEventListener('change',()=>{selectedPreset=null;drawPresets();updateForm();});
-  $('presets').addEventListener('click',e=>{const b=e.target.closest('[data-preset]');if(b)setPreset(b.dataset.preset);});
-  function selectNode(e){const n=e.target.closest('[data-node]');if(n){selectedNode=n.dataset.node;renderGraph();renderInspector();}}
-  $('network').addEventListener('click',selectNode);
-  $('network').addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();const id=e.target.closest('[data-node]')?.dataset.node;selectNode(e);if(id)$('network').querySelector(`[data-node="${id}"]`)?.focus();}});
-  $('view-current').addEventListener('click',()=>{view='current';renderGraph();renderInspector();});
-  $('view-future').addEventListener('click',()=>{if(result){view='future';renderGraph();renderInspector();}});
-  $('day-buttons').addEventListener('click',e=>{const b=e.target.closest('[data-day]');if(b){day=Number(b.dataset.day);render();$('day-buttons').querySelector(`[data-day="${day}"]`)?.focus();}});
-  $('compare').addEventListener('click',()=>{if(!result||isDirty()||result.request.canary)return;comparison=simulate(data,{...result.request,canary:true});renderComparison();toast('همان تغییر با روش انتشار تدریجی مقایسه شد.');});
-  $('evidence-search').addEventListener('input',renderEvidence);$('source-filter').addEventListener('change',renderEvidence);
-  document.addEventListener('click',e=>{
-    const evidence=e.target.closest('[data-evidence]');if(evidence)openEvidence(evidence.dataset.evidence);
-    const service=e.target.closest('[data-service]');if(service){selectedNode=service.dataset.service;location.hash='workspace';renderGraph();renderInspector();}
-    const action=e.target.closest('[data-action]')?.dataset.action;
-    if(action==='export')exportReport();
-    if(action==='print'){renderReport();window.print();}
-    if(action==='reset')reset();
-    if(action==='tour'){tourStep=0;showTourStep();$('tour-dialog').showModal();}
+function startTour() {
+  reset(false);
+  tourStep = 0;
+  showTourStep();
+  $("tour-dialog").showModal();
+}
+function bind() {
+  window.addEventListener("hashchange", () =>
+    navigate(location.hash.slice(1), true),
+  );
+  $("scenario-form").addEventListener("submit", (e) => {
+    e.preventDefault();
+    run();
   });
-  $('close-detail').addEventListener('click',()=>$('detail-dialog').close());
-  $('close-tour').addEventListener('click',()=>$('tour-dialog').close());
-  $('tour-back').addEventListener('click',()=>{if(tourStep>0){tourStep--;showTourStep();}});
-  $('tour-next').addEventListener('click',()=>{if(tourStep<tourSteps.length-1){tourStep++;showTourStep();}else $('tour-dialog').close();});
+  $("scenario-form").addEventListener("input", renderDraft);
+  $("scenario-form").addEventListener("change", renderDraft);
+  $("evidence-search").addEventListener("input", renderEvidence);
+  $("source-filter").addEventListener("change", renderEvidence);
+  $("add-ticket").addEventListener("click", () => addTicket());
+  $("save-decision").addEventListener("click", saveDecision);
+  document.addEventListener("click", (e) => {
+    const scenario = e.target.closest("[data-scenario]");
+    if (scenario) {
+      selectScenario(scenario.dataset.scenario);
+      $("scenarios")
+        .querySelector(`[data-scenario="${scenarioId}"]`)
+        .focus({ preventScroll: true });
+    }
+    const evidence = e.target.closest("[data-evidence]");
+    if (evidence) openEvidence(evidence.dataset.evidence);
+    const graph = e.target.closest("[data-node]");
+    if (graph) {
+      selectedNode = graph.dataset.node;
+      renderGraph();
+      $("network")
+        .querySelector(`[data-node="${selectedNode}"]`)
+        .focus({ preventScroll: true });
+    }
+    const mode = e.target.closest("[data-choose-mode]");
+    if (mode && !dirty()) {
+      $("launch-mode").value = mode.dataset.chooseMode;
+      run();
+    }
+    const close = e.target.closest("[data-close]");
+    if (close) $(close.dataset.close).close();
+    const action = e.target.closest("[data-action]")?.dataset.action;
+    if (action === "export") exportReport();
+    if (action === "print") {
+      location.hash = "report";
+      navigate("report");
+      window.print();
+    }
+    if (action === "reset") reset();
+    if (action === "tour") startTour();
+    if (action === "reload") location.reload();
+  });
+  $("network").addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === " ") {
+      const target = e.target.closest("[data-node]");
+      if (target) {
+        e.preventDefault();
+        selectedNode = target.dataset.node;
+        renderGraph();
+        $("network")
+          .querySelector(`[data-node="${selectedNode}"]`)
+          .focus({ preventScroll: true });
+      }
+    }
+  });
+  $("tour-back").addEventListener("click", () => {
+    if (tourStep > 0) {
+      tourStep--;
+      showTourStep();
+    }
+  });
+  $("tour-next").addEventListener("click", () => {
+    if (tourStep < tour.length - 1) {
+      tourStep++;
+      showTourStep();
+    } else $("tour-dialog").close();
+  });
 }
 async function start() {
   try {
-    const response=await fetch(new URL('./data/demo.json',import.meta.url));if(!response.ok)throw new Error('Data unavailable');data=await response.json();
-    $('target').innerHTML=data.nodes.map(n=>`<option value="${n.id}">${esc(n.label)}</option>`).join('');
-    bindEvents();renderOrganization();setPreset('payment');navigate(location.hash.slice(1));$('loading').hidden=true;
-  } catch(error) { $('loading').hidden=true;$('load-error').hidden=false;console.error('Could not initialize TwinSight:',error); }
+    const response = await fetch(new URL("data/demo.json", import.meta.url));
+    if (!response.ok) throw new Error("Data unavailable");
+    original = await response.json();
+    data = structuredClone(original);
+    document
+      .querySelectorAll("[data-icon]")
+      .forEach((el) => (el.innerHTML = icon(el.dataset.icon)));
+    bind();
+    renderKnowledge();
+    selectScenario("guest", false);
+    navigate(location.hash.slice(1));
+    $("loading").hidden = true;
+    $("demo-notice").hidden = false;
+  } catch (error) {
+    console.error("Could not initialize TwinSight", error);
+    $("loading").hidden = true;
+    $("load-error").hidden = false;
+  }
 }
 start();

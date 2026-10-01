@@ -1,4 +1,10 @@
 node_modules/
 dist/
+release/
+qa/
 .DS_Store
 *.log
+**/bin/
+**/obj/
+.env
+.env.*

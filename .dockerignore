@@ -1,0 +1,6 @@
+*
+!Dockerfile
+!public/
+!public/**
+!scripts/
+!scripts/serve.mjs
