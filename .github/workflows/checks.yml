@@ -1,0 +1,45 @@
+name: Check TwinSight
+on:
+  push:
+    branches: [main, "codex/**"]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: npm test
+      - run: npm run package
+      - uses: actions/upload-artifact@v4
+        with:
+          name: twinsight-deployment
+          path: release/*.zip
+          retention-days: 14
+
+  browser:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install browser QA tools outside the project
+        run: |
+          npm install --prefix "$RUNNER_TEMP/twinsight-browser" --no-audit --no-fund playwright@1.63.0
+          node "$RUNNER_TEMP/twinsight-browser/node_modules/playwright/cli.js" install --with-deps chromium
+      - name: Check browser behavior and capture previews
+        env:
+          PLAYWRIGHT_MODULE_PATH: ${{ runner.temp }}/twinsight-browser/node_modules/playwright
+        run: node tests/browser.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: twinsight-browser-preview
+          path: qa/
+          retention-days: 14

@@ -1,34 +1,107 @@
-// Deterministic presentation model. These constants are demo assumptions, not trained predictions.
-const kindWeights = {feature: .78, migration: 1, performance: .55, security: .88};
-const round = n => Math.round((n + Number.EPSILON) * 10) / 10;
-export function simulate(data, request) {
-  if (!request.description || request.description.trim().length < 12 || request.description.length > 1000) throw new Error('شرح تغییر باید بین ۱۲ تا ۱۰۰۰ نویسه باشد.');
-  if (!data.nodes.some(n => n.id === request.target) || !Object.hasOwn(kindWeights, request.kind)) throw new Error('سرویس و نوع تغییر را انتخاب کنید.');
-  if (!Number.isInteger(request.rollout) || request.rollout < 1 || request.rollout > 100 || !Number.isInteger(request.testCoverage) || request.testCoverage < 0 || request.testCoverage > 100 || typeof request.canary !== 'boolean') throw new Error('تنظیمات انتشار معتبر نیست.');
-  const scores = Object.fromEntries(data.nodes.map(n => [n.id, 0]));
-  const paths = Object.fromEntries(data.nodes.map(n => [n.id, []]));
-  const base = 82 * kindWeights[request.kind] * (.25 + .75 * request.rollout / 100) * (1 - .006 * request.testCoverage) * (request.canary ? .62 : 1);
-  scores[request.target] = base * data.nodes.find(n => n.id === request.target).criticality;
-  paths[request.target] = [request.target];
-  // Strongest weighted path propagates a change through the fixed organizational graph.
-  for (let i = 0; i < data.nodes.length; i++) {
-    let changed = false;
-    for (const edge of data.edges) {
-      const next = scores[edge.from] * edge.weight;
-      if (next > scores[edge.to] + 1e-9) {
-        scores[edge.to] = next; paths[edge.to] = [...paths[edge.from], edge.to]; changed = true;
-      }
-    }
-    if (!changed) break;
-  }
-  const nodes = data.nodes.map(n => ({id: n.id, risk: round(scores[n.id]), latencyDelta: round(scores[n.id] * 2.4), path: paths[n.id]}));
-  const customers = data.customers.map(c => {
-    const index = Math.min(95, Math.max(...c.services.map(id => scores[id])) * c.sensitivity);
-    return {id: c.id, name: c.name, users: c.users, challengeIndex: round(index), exposedUsers: Math.round(c.users * request.rollout / 100 * index / 100)};
-  });
-  const overallRisk = round(Math.max(...nodes.map(n => n.risk)));
-  const factors = [0, .45, .85, 1, .72, .38];
-  const timeline = [0, 1, 3, 7, 14, 30].map((day, i) => ({day, factor: factors[i], risk: round(overallRisk * factors[i]), latencyDelta: round(Math.max(...nodes.map(n => n.latencyDelta)) * factors[i]), exposedUsers: Math.round(customers.reduce((sum, c) => sum + c.exposedUsers, 0) * factors[i])}));
-  return {snapshotId: data.snapshot.id, request: {...request, description: request.description.trim()}, overallRisk, nodes, customers, timeline, evidenceIds: data.evidence.filter(e => scores[e.node] > 1).map(e => e.id), mode: 'fixed-rule-demo', createdAt: new Date().toISOString()};
+// Fictional scenario calculator. No AI inference or learned probabilities.
+export const MODES = {
+  full: { name: "انتشار کامل", exposure: 1, months: [1, 1, 1] },
+  pilot: { name: "شروع محدود و گسترش", exposure: 0.55, months: [0.2, 0.6, 1] },
+  wait: { name: "تعویق سه‌ماهه", exposure: 0, months: [0, 0, 0] },
+};
+const round = (n) => Math.round(n * 10) / 10;
+export function scenarioById(data, id) {
+  const s = data.scenarios.find((s) => s.id === id);
+  if (!s) throw new Error("سناریوی نمونه معتبر نیست.");
+  return s;
 }
-export function atDay(result, day) { return result.timeline.find(t => t.day === day) || result.timeline.find(t => t.day === 7); }
+export function applyUpdate(data) {
+  const next = structuredClone(data);
+  if (next.evidence.some((e) => e.id === next.update.id)) return next;
+  const { riskAddition, extraCost, ...evidence } = next.update;
+  next.evidence.push(evidence);
+  next.revision += 1;
+  next.sources.find((s) => s.id === evidence.source).count += 1;
+  return next;
+}
+export function analyze(data, request) {
+  const s = scenarioById(data, request.scenarioId);
+  if (!Object.hasOwn(MODES, request.mode))
+    throw new Error("روش اجرا را انتخاب کنید.");
+  if (
+    !Number.isFinite(request.effect) ||
+    request.effect < 0 ||
+    request.effect > s.maxEffect
+  )
+    throw new Error("فرض منفعت در محدودهٔ مجاز نیست.");
+  if (typeof request.note !== "string" || request.note.length > 600)
+    throw new Error("یادداشت باید حداکثر ۶۰۰ نویسه باشد.");
+  const updated = data.evidence.some((e) => e.id === data.update.id);
+  const updateRelevant = updated && data.update.scenarioIds.includes(s.id);
+  const extraRisk = updateRelevant ? data.update.riskAddition : 0;
+  const extraCost = updateRelevant ? data.update.extraCost : 0;
+  // Monetary amounts: million tomans. Guest/search: absolute percentage-point uplift.
+  // Duplicate: relative reduction in incidents. Benefits exclude speculative avoided outages.
+  const monthlyBenefit =
+    (((s.units * request.effect) / 100) * s.unitValue) / 1e6;
+  const options = Object.entries(MODES).map(([id, m]) => {
+    const active = id !== "wait";
+    const benefit = round(monthlyBenefit * m.months.reduce((a, b) => a + b, 0));
+    const cost = active
+      ? s.buildCost +
+        3 * s.monthlyOps +
+        extraCost +
+        (id === "pilot" ? s.pilotCost : 0)
+      : 0;
+    return {
+      id,
+      name: m.name,
+      risk: active
+        ? Math.min(95, Math.round((s.baseRisk + extraRisk) * m.exposure))
+        : null,
+      benefit,
+      cost,
+      netLow: round(benefit * 0.6 - cost),
+      netHigh: round(benefit * 1.2 - cost),
+      monthly: m.months.map((f, i) => ({
+        month: i + 1,
+        benefit: round(monthlyBenefit * f),
+      })),
+    };
+  });
+  const selected = options.find((o) => o.id === request.mode);
+  const paths = { [s.target]: [s.target] };
+  for (let i = 0; i < data.nodes.length; i++)
+    for (const e of data.edges) {
+      if (paths[e.from] && s.affected.includes(e.to) && !paths[e.to])
+        paths[e.to] = [...paths[e.from], e.to];
+    }
+  // Guest identity is an upstream dependency, not a downstream effect.
+  if (s.id === "guest") paths.identity = ["identity", "checkout"];
+  const affected = s.affected.map((id) => ({ id, path: paths[id] || [id] }));
+  const ids = [...s.evidenceIds, ...(updateRelevant ? [data.update.id] : [])];
+  return {
+    request: { ...request, note: request.note.trim() },
+    scenario: structuredClone(s),
+    revision: data.revision,
+    createdAt: new Date().toISOString(),
+    mode: "fictional-scenario-calculator",
+    selected,
+    options,
+    affected,
+    updateRelevant,
+    monthlyBenefit: round(monthlyBenefit),
+    evidence: structuredClone(data.evidence.filter((e) => ids.includes(e.id))),
+    assumptions: {
+      horizonMonths: 3,
+      units: s.units,
+      unitValue: s.unitValue,
+      effect: request.effect,
+      benefitRangeMultipliers: [0.6, 1.2],
+      rolloutByMonth: structuredClone(MODES[request.mode].months),
+      buildCost: s.buildCost,
+      monthlyOps: s.monthlyOps,
+      pilotCost: s.pilotCost,
+      extraCost,
+      riskFormula:
+        "(scenario base index + relevant ticket increment) × launch exposure",
+      notice:
+        "اعداد و بازه‌ها فرض سناریو هستند؛ احتمال آماری، سود قطعی و خروجی AI نیستند. زیان ناشی از اختلال و هزینهٔ اشتراک TwinSight در محاسبه نیست.",
+    },
+  };
+}

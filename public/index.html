@@ -1,67 +1,587 @@
 <!doctype html>
 <html lang="fa" dir="rtl">
-<head>
-  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="theme-color" content="#6256eb"><meta name="description" content="TwinSight؛ پیش از انتشار، مسیر اثر یک تغییر نرم‌افزاری بر سرویس‌ها و مشتریان را بررسی کنید. نمونهٔ نمایشی تیم BridgeX.">
-  <title>TwinSight — آیندهٔ تغییر را ببینید</title>
-  <link rel="icon" href="assets/logo.svg" type="image/svg+xml"><link rel="stylesheet" href="styles.css">
-  <script type="module" src="app.js"></script>
-</head>
-<body>
-<a class="skip-link" href="#main">رفتن به محتوای اصلی</a>
-<aside class="sidebar">
-  <a class="brand" href="#workspace"><img src="assets/logo.svg" alt="" width="42" height="42"><span dir="ltr">TwinSight<small>BY BRIDGEX</small></span></a>
-  <div class="organization"><span class="org-avatar">س</span><div><strong>سپهر تجارت</strong><small>سازمان نمونه · فروشگاه آنلاین</small></div></div>
-  <p class="nav-label">فضای کاری</p>
-  <nav aria-label="منوی اصلی">
-    <a href="#workspace" data-nav="workspace"><span data-icon="layers"></span>بررسی تغییر<span class="nav-count">۳</span></a>
-    <a href="#organization" data-nav="organization"><span data-icon="network"></span>نمای سازمان</a>
-    <a href="#report" data-nav="report"><span data-icon="file"></span>گزارش تصمیم</a>
-    <a href="#about" data-nav="about"><span data-icon="spark"></span>دربارهٔ ایده</a>
-  </nav>
-  <div class="sidebar-note"><span data-icon="shield"></span><strong>قبل از تغییر، اثرش را ببینید.</strong><p>از یک تغییر کوچک در کد تا تجربهٔ هزاران مشتری.</p><button class="text-button" data-action="tour">راهنمای ارائه <span aria-hidden="true">←</span></button></div>
-  <div class="sidebar-footer"><span class="demo-dot"></span>نمونهٔ نمایشی <small>ساخته‌شده برای رویداد پُل</small></div>
-</aside>
-<div class="app-shell">
-  <header class="topbar"><div><span class="breadcrumb">سپهر تجارت</span><span class="slash">/</span><strong id="page-title">بررسی تغییر</strong></div><div class="top-actions"><span class="snapshot-tag">نمای سازمان آماده است</span><button class="button small" data-action="tour"><span data-icon="play"></span>راهنمای دمو</button></div></header>
-  <main id="main" tabindex="-1">
-    <div id="loading" class="loading-state" role="status">در حال آماده‌سازی نمونه…</div>
-    <div id="load-error" class="empty-panel" hidden><h1>نمونه بارگیری نشد</h1><p>برنامه را از طریق سرور محلی اجرا کنید و صفحه را دوباره بارگیری کنید.</p><button class="button" onclick="location.reload()">تلاش دوباره</button></div>
-    <section id="workspace" class="page" hidden aria-labelledby="workspace-title">
-      <div class="hero"><div class="hero-copy"><p class="eyebrow"><span class="mini-line"></span>اتاق تصمیم انتشار</p><h1 id="workspace-title">این تغییر، کجا را<br><span>تحت تأثیر قرار می‌دهد؟</span></h1><p>قبل از انتشار، مسیر اثر را از سرویس‌ها تا مشتری ببینید.<br>یک سناریو را امتحان کنید و روش کم‌ریسک‌تر را مقایسه کنید.</p></div><div class="hero-visual" aria-hidden="true"><div class="orbit orbit-one"></div><div class="orbit orbit-two"></div><span class="orb orb-a"></span><span class="orb orb-b"></span><span class="orb orb-c"></span><div class="sight-mark"><img src="assets/logo.svg" alt=""></div><div class="floating-tag tag-a">تغییر در پرداخت</div><div class="floating-tag tag-b">اثر بر سفارش‌ها</div><div class="floating-tag tag-c">تجربهٔ مشتری</div><span class="visual-caption" dir="ltr">ONE CHANGE. A CONNECTED WORLD.</span></div></div>
-      <div class="section-head"><div><h2>از یک تغییر واقعی شروع کنید</h2><p>سه موقعیت آشنا برای دیدن ارزش TwinSight</p></div><span class="muted tiny">۱. انتخاب تغییر &nbsp; ← &nbsp; ۲. بررسی اثر &nbsp; ← &nbsp; ۳. مقایسهٔ انتشار</span></div>
-      <div id="presets" class="preset-grid" aria-label="سناریوهای نمونه"></div>
-      <div class="work-grid">
-        <article class="panel change-panel"><div class="panel-heading"><h2><span class="step-number">۱</span>تغییر پیشنهادی</h2><span class="tiny muted">سناریوی قابل تنظیم</span></div>
-          <form id="scenario-form">
-            <label for="description">چه چیزی قرار است تغییر کند؟</label><textarea id="description" minlength="12" maxlength="1000" rows="3" required></textarea>
-            <p class="field-hint">متن برای ثبت سناریو است؛ محاسبه با تنظیمات زیر انجام می‌شود.</p>
-            <div class="two-fields"><div><label for="target">بخش درگیر</label><select id="target"></select></div><div><label for="kind">نوع تغییر</label><select id="kind"><option value="migration">تعویض اتصال</option><option value="feature">قابلیت جدید</option><option value="performance">بهبود عملکرد</option><option value="security">تغییر امنیتی</option></select></div></div>
-            <div class="range-heading"><label for="rollout">انتشار برای چند درصد کاربران؟</label><output id="rollout-value" for="rollout"></output></div><input id="rollout" type="range" min="1" max="100" value="100"><div class="range-ends"><span>۱٪ · محدود</span><span>۱۰۰٪ · همه</span></div>
-            <label class="switch-row" for="canary"><span><strong>انتشار تدریجی</strong><small>ابتدا گروه کوچک، سپس گسترش انتشار</small></span><input id="canary" type="checkbox" role="switch"></label>
-            <details class="advanced"><summary>تنظیم تکمیلی سناریو</summary><div class="range-heading"><label for="coverage">پوشش آزمون مسیر تغییر</label><output id="coverage-value" for="coverage"></output></div><input id="coverage" type="range" min="0" max="100" value="45"><p class="field-hint">فرض نمایشی از وضعیت سازمان؛ ارتباطی با تست نرم‌افزار این MVP ندارد.</p></details>
-            <button id="simulate" class="button primary run-button" type="submit"><span data-icon="spark"></span>بررسی پیامد تغییر<span aria-hidden="true">←</span></button>
-            <p id="draft-state" class="draft-state" aria-live="polite">نمای سازمان آماده است؛ نیازی به ساخت مدل نیست.</p>
-          </form>
-        </article>
-        <article class="panel map-panel"><div class="panel-heading"><div><h2><span class="step-number">۲</span>مسیر اثر در سازمان</h2><p id="map-subtitle">روی هر بخش بزنید تا نقش و شواهدش را ببینید.</p></div><div class="segmented" aria-label="نمای نقشه"><button id="view-current" aria-pressed="true">وضعیت فعلی</button><button id="view-future" aria-pressed="false" disabled>پس از تغییر</button></div></div>
-          <div class="map-canvas"><div class="map-corner"><span class="status-dot"></span><span id="map-status">نمای ثابت سازمان نمونه</span></div><div class="graph-scroll" tabindex="0" aria-label="نقشهٔ قابل پیمایش سرویس‌ها"><svg id="network" viewBox="0 0 940 410" role="group" aria-label="نقشهٔ سرویس‌ها و مسیر انتقال اثر"></svg></div><div class="map-legend"><span><i class="dot neutral"></i>بدون اثر سناریو</span><span><i class="dot purple"></i>اثر محدود</span><span><i class="dot orange"></i>نیازمند بررسی</span><span><i class="dot red"></i>اثر زیاد</span></div></div>
-          <div class="map-footnote">پیکان‌ها مسیر انتقال اثر را نشان می‌دهند؛ روی یک سرویس کلیک کنید.</div>
-          <div id="timeline" class="timeline" hidden><div><strong>پیامد در گذر زمان</strong><small>الگوی زمانی فرضی دمو</small></div><div id="day-buttons" class="day-buttons" aria-label="روز شبیه‌سازی"></div><svg id="trajectory" viewBox="0 0 480 54" role="img" aria-label="نمودار شاخص اثر در روزهای آینده"></svg></div>
-        </article>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#14253d" />
+    <meta
+      name="description"
+      content="TwinSight، نمونهٔ نمایشی تیم BridgeX؛ بررسی فرصت‌ها و ریسک‌های تغییر نرم‌افزار پیش از اجرا، با دانش سازمان و داده‌های فرضی."
+    />
+    <title>TwinSight | پیش از تغییر، پیامدش را ببینید</title>
+    <link rel="icon" href="assets/logo.svg" type="image/svg+xml" />
+    <link
+      rel="preload"
+      href="assets/fonts/Vazirmatn.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <link rel="stylesheet" href="styles.css" />
+    <script type="module" src="app.js"></script>
+  </head>
+  <body>
+    <a class="skip" href="#main">رفتن به محتوای اصلی</a>
+    <aside class="sidebar">
+      <a class="brand" href="#workspace"
+        ><img src="assets/logo.svg" width="40" height="40" alt="" /><span
+          dir="ltr"
+          >TwinSight<small>BY BRIDGEX</small></span
+        ></a
+      >
+      <div class="workspace-switch">
+        <span class="org-symbol">س</span>
+        <div>
+          <strong>سپهر تجارت</strong><small>فروشگاه آنلاینِ نمونه</small>
+        </div>
+        <span class="sample-dot"></span>
       </div>
-      <div id="result-summary" class="summary-banner" aria-live="polite"><span class="summary-icon" data-icon="spark"></span><div><h2>اثر یک تغییر، به همان سرویس محدود نمی‌ماند.</h2><p>«بررسی پیامد تغییر» را بزنید؛ مسیرهای درگیر و تجربهٔ مشتری اینجا روشن می‌شوند.</p></div></div>
-      <div id="metrics" class="metric-grid" hidden></div>
-      <div class="detail-grid"><article class="panel inspector-panel"><div class="panel-heading"><div><h2>چرا این بخش درگیر است؟</h2><p>از مسیر وابستگی تا شواهد قابل بررسی</p></div><span data-icon="route"></span></div><div id="inspector"></div></article><article class="panel customers-panel"><div class="panel-heading"><div><h2>مشتری چه چیزی حس می‌کند؟</h2><p id="customer-caption">پیامد تغییر برای سه گروه مشتری نمونه</p></div><span data-icon="users"></span></div><div id="customers"></div></article></div>
-      <article id="compare-section" class="panel compare-panel"><div><p class="eyebrow">۳. یک تصمیم بهتر</p><h2>اگر همین تغییر را تدریجی منتشر کنیم؟</h2><p>همان تغییر، همان سازمان؛ فقط روش انتشار متفاوت است.</p></div><button id="compare" class="button primary" disabled><span data-icon="compare"></span>مقایسه با انتشار تدریجی</button><div id="comparison" hidden></div></article>
-    </section>
-    <section id="organization" class="page" hidden aria-labelledby="organization-title"><div class="page-intro"><p class="eyebrow">دانش سازمان، از قبل در دسترس</p><h1 id="organization-title">یک سازمان. یک نمای مشترک.</h1><p>کد، رخدادها و تجربهٔ مشتری کنار هم قرار می‌گیرند تا اثر تغییر قابل مشاهده شود.</p></div><div class="info-strip"><span data-icon="shield"></span><div><strong>برای هر سناریو، مدل سازمان را عوض نمی‌کنیم.</strong><p>در محصول واقعی، داده‌ها از منابع مجاز به‌روز می‌شوند. در این نمونه، اطلاعات آماده و ثابت‌اند؛ انتخاب سناریو فقط یک شبیه‌سازی جدا اجرا می‌کند.</p></div><span class="pill">فقط خواندنی</span></div><div id="source-cards" class="source-grid"></div><div class="section-head"><div><h2>اجزای سازمان نمونه</h2><p>۸ سرویس متصل؛ از ورود کاربر تا گزارش فروش</p></div></div><div id="service-cards" class="service-grid"></div><article class="panel evidence-panel"><div class="panel-heading"><div><h2>شواهد و اطلاعات زمینه‌ای</h2><p>تمام موارد زیر ساختگی‌اند و برای ارائهٔ ایده آماده شده‌اند.</p></div><span id="evidence-count" class="pill"></span></div><div class="evidence-tools"><label class="search-box"><span data-icon="search"></span><input id="evidence-search" type="search" placeholder="جست‌وجو در شواهد…" aria-label="جست‌وجو در شواهد"></label><select id="source-filter" aria-label="فیلتر منبع"><option value="all">همهٔ منابع</option></select></div><div id="evidence-list"></div></article></section>
-    <section id="report" class="page" hidden aria-labelledby="report-title"><div class="page-intro"><p class="eyebrow">از مشاهده تا تصمیم</p><h1 id="report-title">جمع‌بندی برای تیم انتشار</h1><p>تغییر پیشنهادی، مسیرهای درگیر و راه کاهش اثر، در یک گزارش.</p></div><div id="report-content"></div></section>
-    <section id="about" class="page" hidden aria-labelledby="about-title"><div class="page-intro"><p class="eyebrow">TwinSight / تیم BridgeX</p><h1 id="about-title">قبل از انتشار، آینده را مرور کنید.</h1><p>دوقلوی نرم‌افزاری سازمان برای دیدن پیامد تغییر بر سرویس‌ها و مشتریان.</p></div><div class="about-grid"><article class="panel about-card"><span data-icon="route"></span><h2>مسئله چیست؟</h2><p>تیم می‌داند چه کدی تغییر می‌کند؛ اما دانش وابستگی‌ها بین مخزن کد، تیکت‌ها و ذهن افراد پراکنده است. اثر بر سفارش، گزارش و تجربهٔ مشتری دیر دیده می‌شود.</p></article><article class="panel about-card"><span data-icon="network"></span><h2>راه‌حل ما</h2><p>یک نمای مشترک از سرویس‌ها، وابستگی‌ها و شواهد. تغییر پیشنهادی روی یک نسخهٔ جدا شبیه‌سازی می‌شود تا تیم پیش از انتشار، مسیرهای حساس را ببیند و گزینه‌ها را مقایسه کند.</p></article><article class="panel about-card"><span data-icon="users"></span><h2>برای چه کسی؟</h2><p>مسئول انتشار و مدیر محصول برای بررسی تغییر؛ مدیر مهندسی برای تصمیم. ارزش پیشنهادی، کاهش بررسی دستی و زودتر دیدن اختلال احتمالی مشتری است؛ هنوز با دادهٔ واقعی سنجیده نشده است.</p></article></div><article class="panel ai-roadmap"><div><span class="pill">مسیر محصول واقعی</span><h2>هوش مصنوعی کجای این ایده قرار می‌گیرد؟</h2><p>در نسخهٔ آینده، استخراج روابط از کد و مستندات، تبدیل شرح تغییر به سناریو و توضیح پیامد با ارجاع به شواهد. اعتبار پیش‌بینی باید با رخدادهای واقعی سنجیده شود و تصمیم انتشار با انسان بماند.</p></div><div class="demo-facts"><strong>در این MVP چه چیزی کار می‌کند؟</strong><p>نقشهٔ تعاملی، شبیه‌سازی قواعد ثابت، اثر بر گروه‌های مشتری، مقایسهٔ انتشار و خروجی گزارش.</p><strong>چه چیزی شبیه‌سازی شده است؟</strong><p>سازمان، منابع، شواهد، اعداد و الگوی زمانی. هیچ LLM، اتصال زنده، مدل آموزش‌دیده یا انتشار واقعی وجود ندارد.</p></div></article><div class="info-strip"><span data-icon="shield"></span><div><strong>مدل سازمان با مدل زبانی یکسان نیست.</strong><p>دانش سازمان شامل داده‌ها و روابط است. به‌روزشدن آن لزوماً به معنی تعویض یا آموزش دوبارهٔ LLM نیست. سناریوی «چه می‌شود اگر» هم نمای اصلی سازمان را تغییر نمی‌دهد.</p></div></div></section>
-    <footer class="main-footer"><span dir="ltr">TwinSight <b>×</b> BridgeX</span><span>دادهٔ ساختگی · محاسبات نمایشی · تصمیم با انسان</span><button class="text-button" data-action="reset">شروع دوبارهٔ دمو</button></footer>
-  </main>
-</div>
-<dialog id="detail-dialog"><div class="dialog-head"><span class="pill">شاهد نمونه</span><button id="close-detail" class="icon-button" aria-label="بستن جزئیات">×</button></div><div id="detail-content"></div></dialog>
-<dialog id="tour-dialog"><div class="dialog-head"><span id="tour-step" class="pill"></span><button id="close-tour" class="icon-button" aria-label="بستن راهنمای دمو">×</button></div><div class="tour-mark"><img src="assets/logo.svg" alt="" width="56" height="56"></div><h2 id="tour-title"></h2><p id="tour-copy"></p><div class="tour-controls"><button id="tour-back" class="button">قبلی</button><span id="tour-dots"></span><button id="tour-next" class="button primary">بعدی ←</button></div></dialog>
-<div id="toast" class="toast" role="status" hidden></div>
-</body></html>
+      <p class="nav-label">میز تصمیم</p>
+      <nav aria-label="منوی اصلی">
+        <a href="#workspace" data-nav="workspace"
+          ><span data-icon="layers"></span>بررسی تغییر<span class="nav-arrow"
+            >←</span
+          ></a
+        >
+        <a href="#knowledge" data-nav="knowledge"
+          ><span data-icon="network"></span>دانش سازمان<span
+            class="nav-badge"
+            id="knowledge-revision"
+            >۱</span
+          ></a
+        >
+        <a href="#report" data-nav="report"
+          ><span data-icon="file"></span>گزارش تصمیم</a
+        >
+        <a href="#about" data-nav="about"
+          ><span data-icon="compass"></span>ایده و مسیر آینده</a
+        >
+      </nav>
+      <div class="sidebar-bottom">
+        <div class="sidebar-message">
+          <div class="mini-twin" aria-hidden="true">↗</div>
+          <strong>آینده را پیش از اجرا بررسی کنید.</strong>
+          <p>از تغییر نرم‌افزار، تا تجربهٔ مشتری و ارزش کسب‌وکار.</p>
+          <button class="sidebar-tour" data-action="tour">
+            راهنمای دمو <span>←</span>
+          </button>
+        </div>
+        <div class="sidebar-credit">
+          <span>تیم <b dir="ltr">BridgeX</b></span
+          ><small>ساخته‌شده برای رویداد پُل</small>
+        </div>
+      </div>
+    </aside>
+    <div class="shell">
+      <header class="topbar">
+        <div class="breadcrumb">
+          <span>سپهر تجارت</span><span class="slash">/</span
+          ><strong id="page-title">بررسی تغییر</strong>
+        </div>
+        <div class="top-actions">
+          <span class="demo-label"><i></i>دموی تعاملی</span
+          ><button class="button small" data-action="tour">
+            <span data-icon="play"></span>نمایش ایده
+          </button>
+        </div>
+      </header>
+      <main id="main" tabindex="-1">
+        <div id="loading" class="load-state" role="status">
+          در حال آماده‌سازی نمونه…
+        </div>
+        <div id="load-error" class="panel error-state" hidden>
+          <h1>نمونه بارگیری نشد.</h1>
+          <p>
+            اتصال را بررسی کنید و دوباره تلاش کنید. برای اجرای محلی، برنامه را
+            با سرور باز کنید.
+          </p>
+          <button class="button" data-action="reload">تلاش دوباره</button>
+        </div>
+        <div class="demo-notice" id="demo-notice" hidden>
+          <span data-icon="info"></span>
+          <p>
+            سازمان و داده‌ها فرضی‌اند. تحلیل این نسخه بر پایهٔ سناریوهای آماده
+            است؛ اتصال زنده و پیش‌بینی AI در نسخهٔ آینده خواهند بود.
+          </p>
+          <a href="#about">حدود نمونه ←</a>
+        </div>
+        <section
+          id="workspace"
+          class="page"
+          hidden
+          aria-labelledby="workspace-title"
+        >
+          <div class="hero">
+            <div>
+              <p class="eyebrow"><span></span>دوقلوی نرم‌افزاری سازمان</p>
+              <h1 id="workspace-title">
+                قبل از تغییر،<br /><span>پیامدش را ببینید.</span>
+              </h1>
+              <p class="hero-description">
+                اگر این قابلیت را بسازیم یا این خطا را رفع کنیم، چه چیزی تغییر
+                می‌کند؟<br />فرصت‌ها، ریسک‌ها و مسیر اثر را کنار هم بررسی کنید.
+              </p>
+              <div class="hero-trail">
+                <span><b>۰۱</b>دانش سازمان</span><i>←</i
+                ><span><b>۰۲</b>سناریوی تغییر</span><i>←</i
+                ><span><b>۰۳</b>تصمیم شما</span>
+              </div>
+            </div>
+            <div class="hero-art" aria-hidden="true">
+              <svg viewBox="0 0 360 240">
+                <defs>
+                  <pattern
+                    id="dots"
+                    width="18"
+                    height="18"
+                    patternUnits="userSpaceOnUse"
+                  >
+                    <circle cx="1" cy="1" r="1" fill="#cad4e1" />
+                  </pattern>
+                </defs>
+                <rect width="360" height="240" fill="url(#dots)" />
+                <path
+                  d="M45 160 L120 160 L160 70 L235 70 L280 125 L330 125"
+                  fill="none"
+                  stroke="#ccd5e3"
+                  stroke-width="2"
+                />
+                <path
+                  d="M45 160 L120 160 L170 180 L235 180 L280 125"
+                  fill="none"
+                  stroke="#4166df"
+                  stroke-width="2"
+                />
+                <circle
+                  cx="120"
+                  cy="160"
+                  r="28"
+                  fill="#edf1fd"
+                  stroke="#4265dc"
+                />
+                <circle cx="235" cy="70" r="21" fill="#fff" stroke="#aab8cc" />
+                <circle cx="235" cy="180" r="21" fill="#fff" stroke="#4265dc" />
+                <circle cx="280" cy="125" r="10" fill="#14253d" />
+                <path
+                  d="M112 160 h16 M120 152 v16"
+                  stroke="#4166df"
+                  stroke-width="2"
+                /></svg
+              ><span class="art-chip art-chip-one">تغییر پیشنهادی</span
+              ><span class="art-chip art-chip-two"><i></i>فرصت رشد</span
+              ><span class="art-chip art-chip-three"><i></i>ریسک وابستگی</span
+              ><small dir="ltr">A CLEARER VIEW OF WHAT’S NEXT</small>
+            </div>
+          </div>
+          <div class="section-heading">
+            <div>
+              <h2>یک تغییر را بررسی کنید</h2>
+              <p>سه موقعیت آشنا؛ یک نمای مشترک از پیامدها</p>
+            </div>
+            <span class="section-counter">۰۱ / سناریو</span>
+          </div>
+          <div
+            id="scenarios"
+            class="scenario-grid"
+            aria-label="سناریوهای نمونه"
+          ></div>
+          <div class="decision-grid">
+            <article class="panel scenario-panel">
+              <div class="panel-heading">
+                <h2>تغییر پیشنهادی</h2>
+                <span id="scenario-type" class="pill"></span>
+              </div>
+              <form id="scenario-form">
+                <h3 id="scenario-title"></h3>
+                <p id="scenario-description" class="muted"></p>
+                <label for="launch-mode">روش اجرا</label
+                ><select id="launch-mode">
+                  <option value="full">انتشار کامل</option>
+                  <option value="pilot">شروع محدود و گسترش</option>
+                  <option value="wait">تعویق سه‌ماهه</option>
+                </select>
+                <details class="assumption-editor">
+                  <summary>فرض منفعت و یادداشت شما</summary>
+                  <label id="effect-label" for="effect"></label>
+                  <div class="input-with-unit">
+                    <input
+                      id="effect"
+                      type="number"
+                      min="0"
+                      step="0.1"
+                      required
+                    /><span id="effect-unit"></span>
+                  </div>
+                  <p class="hint">
+                    این مقدار فرض شماست و هنوز با دادهٔ واقعی سنجیده نشده است.
+                  </p>
+                  <label for="note">یادداشت تصمیم</label
+                  ><textarea
+                    id="note"
+                    rows="2"
+                    maxlength="600"
+                    placeholder="مثلاً: ابتدا برای مشتریان تازه‌وارد اجرا شود."
+                  ></textarea>
+                  <p class="hint">
+                    یادداشت در گزارش ثبت می‌شود؛ این دمو متن آزاد را تحلیل
+                    نمی‌کند.
+                  </p>
+                </details>
+                <button class="button primary run-button" type="submit">
+                  <span data-icon="spark"></span>بررسی پیامد تغییر<span
+                    class="button-arrow"
+                    >←</span
+                  >
+                </button>
+                <p id="draft-state" class="hint" aria-live="polite"></p>
+                <p id="form-error" class="error-text" role="alert" hidden></p>
+              </form>
+            </article>
+            <article
+              class="decision-summary"
+              id="decision-summary"
+              aria-live="polite"
+            ></article>
+          </div>
+          <div
+            id="update-banner"
+            class="update-banner"
+            hidden
+            role="status"
+          ></div>
+          <div class="section-heading result-heading">
+            <div>
+              <h2>از تغییر تا پیامد</h2>
+              <p>فرصت اقتصادی، ریسک فنی و تجربهٔ مشتری در یک نگاه</p>
+            </div>
+            <span class="section-counter">۰۲ / پیامد</span>
+          </div>
+          <div id="impact-cards" class="impact-grid"></div>
+          <div class="model-grid">
+            <article class="panel model-panel">
+              <div class="panel-heading">
+                <div>
+                  <h2>مسیر اثر در نرم‌افزار</h2>
+                  <p>یک بخش را انتخاب کنید تا وابستگی‌اش را ببینید.</p>
+                </div>
+                <span class="pill" id="model-version"></span>
+              </div>
+              <div
+                class="graph-scroll"
+                tabindex="0"
+                aria-label="نقشهٔ سرویس‌ها؛ در صفحهٔ کوچک قابل پیمایش است"
+              >
+                <svg
+                  id="network"
+                  viewBox="0 0 820 340"
+                  role="group"
+                  aria-label="وابستگی‌های نرم‌افزار نمونه"
+                ></svg>
+              </div>
+              <div class="graph-legend">
+                <span><i class="legend-dot target"></i>محل تغییر</span
+                ><span><i class="legend-dot affected"></i>بخش مرتبط</span
+                ><span><i class="legend-dot neutral"></i>خارج از دامنه</span>
+              </div>
+              <div id="inspector" class="inspector"></div>
+            </article>
+            <article class="panel opportunity-panel">
+              <div class="panel-heading">
+                <h2>چرا این تغییر ارزش بررسی دارد؟</h2>
+                <span data-icon="trend"></span>
+              </div>
+              <div id="opportunity"></div>
+            </article>
+          </div>
+          <div class="section-heading">
+            <div>
+              <h2>کدام روش اجرا مناسب‌تر است؟</h2>
+              <p>منفعت زودتر، مواجههٔ بیشتر؛ شروع محدود، فرصت یادگیری</p>
+            </div>
+            <span class="section-counter">۰۳ / مقایسه</span>
+          </div>
+          <div id="options" class="options-grid"></div>
+          <div class="comparison-note">
+            <span data-icon="info"></span>
+            <p>
+              بازه‌ها فرض سناریو هستند، نه بازهٔ اطمینان آماری. تعویق، ریسک
+              تغییر جدید را حذف می‌کند؛ مشکل فعلی و فرصت ازدست‌رفته باقی
+              می‌مانند.
+            </p>
+          </div>
+          <div class="review-grid">
+            <article class="panel">
+              <div class="panel-heading">
+                <h2>پیش از اجرا، این‌ها را بررسی کنید</h2>
+                <span data-icon="shield"></span>
+              </div>
+              <div id="risks"></div>
+            </article>
+            <article class="panel">
+              <div class="panel-heading">
+                <h2>چه چیزی هنوز روشن نیست؟</h2>
+                <span class="pill amber">اطلاعات موردنیاز</span>
+              </div>
+              <div id="questions"></div>
+            </article>
+          </div>
+          <article class="panel human-panel">
+            <div class="human-title">
+              <span class="icon-box" data-icon="users"></span>
+              <div>
+                <h2>تحلیل کمک می‌کند؛ تصمیم با شماست.</h2>
+                <p>روش اجرا را انتخاب کنید و تصمیم اولیهٔ تیم را ثبت کنید.</p>
+              </div>
+            </div>
+            <div class="human-controls">
+              <label class="sr-only" for="decision">تصمیم اولیهٔ تیم</label
+              ><select id="decision">
+                <option value="">هنوز تصمیم نگرفته‌ایم</option>
+                <option value="pilot">پایلوت را بررسی می‌کنیم</option>
+                <option value="full">انتشار کامل را بررسی می‌کنیم</option>
+                <option value="wait">تا تکمیل اطلاعات صبر می‌کنیم</option>
+                <option value="reject">
+                  این تغییر را فعلاً کنار می‌گذاریم
+                </option></select
+              ><button class="button" id="save-decision">ثبت تصمیم</button>
+            </div>
+            <p id="decision-status" class="hint" aria-live="polite">
+              تصمیمی ثبت نشده است.
+            </p>
+          </article>
+        </section>
+        <section
+          id="knowledge"
+          class="page"
+          hidden
+          aria-labelledby="knowledge-title"
+        >
+          <div class="page-intro">
+            <p class="eyebrow"><span></span>دانش مشترک، تصمیم روشن‌تر</p>
+            <h1 id="knowledge-title">نرم‌افزار را در زمینهٔ سازمان ببینید.</h1>
+            <p>
+              بک‌لاگ، تیکت، کد و دادهٔ عملیاتی؛ هرکدام بخشی از تصویر را کامل
+              می‌کنند.
+            </p>
+          </div>
+          <div id="source-cards" class="source-grid"></div>
+          <article class="panel knowledge-update">
+            <div>
+              <span class="pill blue">نمایش به‌روزرسانی مدل</span>
+              <h2>یک تیکت تازه، یک پیامد تازه</h2>
+              <p>
+                یک تیکت ساختگی دربارهٔ تأخیر درگاه وارد کنید. تحلیل سناریوی جاری
+                دوباره محاسبه می‌شود و دلیل تغییر را خواهید دید.
+              </p>
+              <small
+                >این دریافت، با کلیک شما شبیه‌سازی می‌شود؛ به سامانهٔ واقعی وصل
+                نیست.</small
+              >
+            </div>
+            <button class="button primary" id="add-ticket">
+              <span data-icon="refresh"></span>ورود تیکت نمونه
+            </button>
+          </article>
+          <div
+            id="knowledge-update-status"
+            class="update-banner"
+            hidden
+            role="status"
+          ></div>
+          <article class="panel evidence-panel">
+            <div class="panel-heading">
+              <div>
+                <h2>شواهد قابل بررسی</h2>
+                <p>همهٔ متن‌ها و اعداد زیر ساختگی‌اند.</p>
+              </div>
+              <span id="evidence-count" class="pill"></span>
+            </div>
+            <div class="evidence-tools">
+              <label class="search-field"
+                ><span data-icon="search"></span
+                ><input
+                  id="evidence-search"
+                  type="search"
+                  placeholder="جست‌وجو در شواهد…"
+                  aria-label="جست‌وجو در شواهد" /></label
+              ><label class="sr-only" for="source-filter">منبع شاهد</label
+              ><select id="source-filter">
+                <option value="all">همهٔ منابع</option>
+              </select>
+            </div>
+            <div id="evidence-list"></div>
+          </article>
+        </section>
+        <section id="report" class="page" hidden aria-labelledby="report-title">
+          <div class="page-intro report-intro">
+            <div>
+              <p class="eyebrow"><span></span>جمع‌بندی برای تیم</p>
+              <h1 id="report-title">گزارش یک تصمیم</h1>
+              <p>سناریو، پیامدها و فرض‌ها؛ آمادهٔ مرور و گفت‌وگو.</p>
+            </div>
+            <div class="report-buttons">
+              <button class="button" data-action="export">
+                <span data-icon="download"></span>دریافت JSON</button
+              ><button class="button primary" data-action="print">
+                <span data-icon="file"></span>چاپ / ذخیرهٔ PDF
+              </button>
+            </div>
+          </div>
+          <div id="report-content"></div>
+        </section>
+        <section id="about" class="page" hidden aria-labelledby="about-title">
+          <div class="page-intro">
+            <p class="eyebrow"><span></span>BridgeX برای رویداد پُل</p>
+            <h1 id="about-title">یک تغییر کوچک،<br />پیامدهایی فراتر از کد.</h1>
+            <p>
+              TwinSight مسیر رسیدن از دانش پراکندهٔ سازمان به تصمیم آگاهانه
+              دربارهٔ نرم‌افزار است.
+            </p>
+          </div>
+          <div class="about-grid">
+            <article class="panel">
+              <span class="icon-box" data-icon="layers"></span>
+              <h2>مسئلهٔ امروز</h2>
+              <p>
+                دانش وابستگی‌ها بین کد، تیکت‌ها و ذهن افراد پراکنده است. تیم‌ها
+                اثر یک تغییر بر مشتری و کسب‌وکار را گاهی بعد از انتشار می‌بینند.
+              </p>
+            </article>
+            <article class="panel">
+              <span class="icon-box" data-icon="compass"></span>
+              <h2>تغییر قاعده</h2>
+              <p>
+                پیش از توسعه و انتشار، سناریو را روی مدل سازمان بررسی کنیم؛ از
+                واکنش پس از اختلال، به بررسی پیامد پیش از تصمیم برسیم.
+              </p>
+            </article>
+            <article class="panel">
+              <span class="icon-box" data-icon="trend"></span>
+              <h2>ارزش برای سازمان</h2>
+              <p>
+                بررسی سریع‌تر تغییر، کشف وابستگی‌های پنهان و مقایسهٔ هزینه و
+                منفعت. این ارزش باید در پایلوت با زمان بررسی و نتیجهٔ تغییرهای
+                واقعی سنجیده شود.
+              </p>
+            </article>
+          </div>
+          <article class="panel roadmap">
+            <div class="section-heading">
+              <div>
+                <h2>از نمونهٔ امروز تا مدل زندهٔ فردا</h2>
+                <p>مسیر محصول، با مرز روشن بین آنچه داریم و آنچه باید بسازیم</p>
+              </div>
+            </div>
+            <div class="roadmap-grid">
+              <div>
+                <span class="roadmap-step">۱</span
+                ><span class="pill blue">همین MVP</span>
+                <h3>دیدن پیامدها</h3>
+                <p>
+                  سه سناریوی آماده، نقشهٔ وابستگی، مقایسهٔ اقتصادی و ورود یک
+                  تیکت ساختگی. محاسبات با قواعد شفاف انجام می‌شوند.
+                </p>
+              </div>
+              <div>
+                <span class="roadmap-step">۲</span
+                ><span class="pill">پایلوت بعدی</span>
+                <h3>دانش متصل به سازمان</h3>
+                <p>
+                  دریافت مجاز بک‌لاگ، تیکت و کد؛ ثبت منبع، تاریخ و نسخه. بازبینی
+                  روابط و اصلاح تحلیل توسط تیم.
+                </p>
+              </div>
+              <div>
+                <span class="roadmap-step">۳</span
+                ><span class="pill">هدف محصول</span>
+                <h3>تحلیل پیوسته با AI</h3>
+                <p>
+                  فهم تغییرها، استخراج روابط و هشدار فرصت و ریسک با ارجاع به
+                  شواهد؛ سنجش پیش‌بینی با نتیجهٔ واقعی و حفظ کنترل انسان.
+                </p>
+              </div>
+            </div>
+          </article>
+          <div class="review-grid">
+            <article class="panel">
+              <h2>هوش مصنوعی چه کاری خواهد کرد؟</h2>
+              <ul class="plain-list">
+                <li>
+                  شرح تغییر و تیکت را به بخش‌های مرتبط نرم‌افزار وصل می‌کند.
+                </li>
+                <li>
+                  از شواهد پراکنده، روابط و پیامدهای احتمالی را استخراج می‌کند.
+                </li>
+                <li>
+                  با دادهٔ تازه، تحلیل را بازبینی و ابهام‌ها را آشکار می‌کند.
+                </li>
+              </ul>
+              <p class="hint">
+                در این نسخه هیچ مدل زبانی، پیش‌بینی آموزش‌دیده یا تحلیل خودکار
+                متن اجرا نمی‌شود.
+              </p>
+            </article>
+            <article class="panel">
+              <h2>اعتماد و کنترل انسانی</h2>
+              <ul class="plain-list">
+                <li>هر ادعا باید به شاهد یا فرض مشخص متصل باشد.</li>
+                <li>دادهٔ ناکافی باید به‌عنوان ابهام نمایش داده شود.</li>
+                <li>انتشار، توقف و تأیید تحلیل در اختیار انسان می‌ماند.</li>
+              </ul>
+              <p class="hint">
+                در محصول واقعی، دسترسی حداقلی، حفاظت از داده و امکان اصلاح و حذف
+                لازم است.
+              </p>
+            </article>
+          </div>
+        </section>
+        <footer>
+          <span
+            ><b dir="ltr">TwinSight</b> <i>×</i> تیم
+            <b dir="ltr">BridgeX</b></span
+          ><span>دادهٔ فرضی · تصمیم با انسان</span
+          ><button class="text-button" data-action="reset">بازنشانی دمو</button>
+        </footer>
+      </main>
+    </div>
+    <dialog id="evidence-dialog">
+      <div class="dialog-head">
+        <span class="pill">شاهد ساختگی</span
+        ><button
+          class="icon-button"
+          data-close="evidence-dialog"
+          aria-label="بستن جزئیات"
+        >
+          ×
+        </button>
+      </div>
+      <div id="evidence-detail"></div>
+    </dialog>
+    <dialog id="tour-dialog">
+      <div class="dialog-head">
+        <span id="tour-counter" class="pill"></span
+        ><button
+          class="icon-button"
+          data-close="tour-dialog"
+          aria-label="بستن راهنمای دمو"
+        >
+          ×
+        </button>
+      </div>
+      <div class="tour-symbol" data-icon="compass"></div>
+      <h2 id="tour-title"></h2>
+      <p id="tour-copy"></p>
+      <div class="tour-controls">
+        <button class="button" id="tour-back">قبلی</button
+        ><span id="tour-dots"></span
+        ><button class="button primary" id="tour-next">بعدی ←</button>
+      </div>
+    </dialog>
+    <div id="toast" class="toast" role="status" hidden></div>
+    <noscript
+      ><p class="noscript">
+        برای نمایش این نمونه، JavaScript مرورگر را فعال کنید.
+      </p></noscript
+    >
+  </body>
+</html>
